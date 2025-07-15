@@ -8,5 +8,9 @@
   "type": "module",
   "workspaces": [
     "frontend"
-  ]
+  ],
+  "dependencies": {
+    "lucide-react": "^0.525.0",
+    "react-router-dom": "^7.6.3"
+  }
 }
