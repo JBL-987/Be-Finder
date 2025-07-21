@@ -25,13 +25,13 @@ const Contact = () => {
   };
 
   return (
-    <div className="min-h-screen bg-black text-white pt-20">
+    <div className="min-h-screen bg-dark-bg text-dark-text-primary pt-20">
       <div className="max-w-7xl mx-auto px-4 py-12">
         <div className="text-center mb-12">
           <h1 className="text-4xl md:text-6xl font-bold mb-6 bg-gradient-to-r from-blue-400 to-purple-600 bg-clip-text text-transparent">
             Contact Us
           </h1>
-          <p className="text-xl text-gray-300 max-w-3xl mx-auto">
+          <p className="text-xl text-dark-text-secondary max-w-3xl mx-auto">
             Get in touch with our team. We're here to help you succeed.
           </p>
         </div>
@@ -39,7 +39,7 @@ const Contact = () => {
         <div className="grid md:grid-cols-2 gap-12">
           <div>
             <h2 className="text-3xl font-bold mb-6 text-blue-400">Get in Touch</h2>
-            <p className="text-gray-300 mb-8">
+            <p className="text-dark-text-secondary mb-8">
               Have questions about Locatify? Want to learn more about our AI-powered accounting solutions? 
               We'd love to hear from you.
             </p>
@@ -51,7 +51,7 @@ const Contact = () => {
                 </div>
                 <div>
                   <h3 className="text-lg font-semibold">Email</h3>
-                  <p className="text-gray-300">support@locatify.com</p>
+                  <p className="text-dark-text-secondary">support@be-finder.com</p>
                 </div>
               </div>
               
@@ -61,7 +61,7 @@ const Contact = () => {
                 </div>
                 <div>
                   <h3 className="text-lg font-semibold">Phone</h3>
-                  <p className="text-gray-300">+1 (555) 123-4567</p>
+                  <p className="text-dark-text-secondary">+1 (555) 123-4567</p>
                 </div>
               </div>
               
@@ -71,7 +71,7 @@ const Contact = () => {
                 </div>
                 <div>
                   <h3 className="text-lg font-semibold">Address</h3>
-                  <p className="text-gray-300">
+                  <p className="text-dark-text-secondary">
                     123 Innovation Street<br />
                     Tech City, TC 12345
                   </p>
@@ -80,7 +80,7 @@ const Contact = () => {
             </div>
           </div>
 
-          <div className="bg-gray-900/50 rounded-lg p-8 border border-blue-900/30">
+          <div className="bg-dark-surface/50 rounded-lg p-8 border border-dark-border">
             <h3 className="text-2xl font-bold mb-6 text-purple-400">Send Message</h3>
             <form onSubmit={handleSubmit} className="space-y-6">
               <div>
@@ -90,7 +90,7 @@ const Contact = () => {
                   name="name"
                   value={formData.name}
                   onChange={handleChange}
-                  className="w-full px-4 py-3 bg-gray-800 border border-gray-700 rounded-lg focus:border-blue-500 focus:outline-none"
+                  className="w-full px-4 py-3 bg-dark-bg border border-dark-border rounded-lg focus:border-blue-500 focus:outline-none"
                   required
                 />
               </div>
@@ -102,7 +102,7 @@ const Contact = () => {
                   name="email"
                   value={formData.email}
                   onChange={handleChange}
-                  className="w-full px-4 py-3 bg-gray-800 border border-gray-700 rounded-lg focus:border-blue-500 focus:outline-none"
+                  className="w-full px-4 py-3 bg-dark-bg border border-dark-border rounded-lg focus:border-blue-500 focus:outline-none"
                   required
                 />
               </div>
@@ -114,7 +114,7 @@ const Contact = () => {
                   name="subject"
                   value={formData.subject}
                   onChange={handleChange}
-                  className="w-full px-4 py-3 bg-gray-800 border border-gray-700 rounded-lg focus:border-blue-500 focus:outline-none"
+                  className="w-full px-4 py-3 bg-dark-bg border border-dark-border rounded-lg focus:border-blue-500 focus:outline-none"
                   required
                 />
               </div>
@@ -126,7 +126,7 @@ const Contact = () => {
                   value={formData.message}
                   onChange={handleChange}
                   rows="4"
-                  className="w-full px-4 py-3 bg-gray-800 border border-gray-700 rounded-lg focus:border-blue-500 focus:outline-none"
+                  className="w-full px-4 py-3 bg-dark-bg border border-dark-border rounded-lg focus:border-blue-500 focus:outline-none"
                   required
                 ></textarea>
               </div>

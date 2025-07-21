@@ -10,12 +10,12 @@ const Navbar_Component = ({isAuthenticated, logout}) => {
   };
 
   return (
-    <nav className="bg-black/80 backdrop-blur-md fixed w-full z-50 top-0 start-0 border-b border-blue-900/30 shadow-lg">
+    <nav className="bg-dark-bg/80 backdrop-blur-md fixed w-full z-50 top-0 start-0 border-b border-dark-border shadow-lg">
       <div className="max-w-7xl flex flex-wrap items-center justify-between mx-auto p-4">
         <div className="flex items-center space-x-3 rtl:space-x-reverse">
           <Link to="/" className="flex items-center space-x-2">
             <span className="self-center text-2xl font-bold whitespace-nowrap text-white bg-gradient-to-r from-blue-400 to-purple-600 bg-clip-text text-transparent">
-              Locatify
+              Be-Finder
             </span>
           </Link>
         </div>
@@ -28,19 +28,19 @@ const Navbar_Component = ({isAuthenticated, logout}) => {
         </button>
 
         <div className="hidden md:flex items-center space-x-8">
-          <Link to="/features" className="text-gray-300 hover:text-blue-400 transition-colors">
+          <Link to="/features" className="text-dark-text-secondary hover:text-blue-400 transition-colors">
             Features
           </Link>
-          <Link to="/pricing" className="text-gray-300 hover:text-blue-400 transition-colors">
+          <Link to="/pricing" className="text-dark-text-secondary hover:text-blue-400 transition-colors">
             Pricing
           </Link>
-          <Link to="/about" className="text-gray-300 hover:text-blue-400 transition-colors">
+          <Link to="/about" className="text-dark-text-secondary hover:text-blue-400 transition-colors">
             About
           </Link>
-          <Link to="/contact" className="text-gray-300 hover:text-blue-400 transition-colors">
+          <Link to="/contact" className="text-dark-text-secondary hover:text-blue-400 transition-colors">
             Contact
           </Link>
-          <Link to="/documentation" className="text-gray-300 hover:text-blue-400 transition-colors">
+          <Link to="/documentation" className="text-dark-text-secondary hover:text-blue-400 transition-colors">
             Documentation
           </Link>
                   
@@ -58,39 +58,39 @@ const Navbar_Component = ({isAuthenticated, logout}) => {
         </div>
 
         {mobileMenuOpen && (
-          <div className="md:hidden w-full mt-4 bg-gray-900 rounded-lg p-4 border border-blue-900/30">
+          <div className="md:hidden w-full mt-4 bg-dark-surface rounded-lg p-4 border border-dark-border">
             <div className="flex flex-col space-y-4">
               <Link
                 to="/features"
-                className="text-gray-300 hover:text-blue-400 transition-colors py-2"
+                className="text-dark-text-secondary hover:text-blue-400 transition-colors py-2"
                 onClick={() => setMobileMenuOpen(false)}
               >
                 Features
               </Link>
               <Link
                 to="/pricing"
-                className="text-gray-300 hover:text-blue-400 transition-colors py-2"
+                className="text-dark-text-secondary hover:text-blue-400 transition-colors py-2"
                 onClick={() => setMobileMenuOpen(false)}
               >
                 Pricing
               </Link>
               <Link
                 to="/about"
-                className="text-gray-300 hover:text-blue-400 transition-colors py-2"
+                className="text-dark-text-secondary hover:text-blue-400 transition-colors py-2"
                 onClick={() => setMobileMenuOpen(false)}
               >
                 About
               </Link>
               <Link
                 to="/contact"
-                className="text-gray-300 hover:text-blue-400 transition-colors py-2"
+                className="text-dark-text-secondary hover:text-blue-400 transition-colors py-2"
                 onClick={() => setMobileMenuOpen(false)}
               >
                 Contact
               </Link>
               <Link
                 to="/documentation"
-                className="text-gray-300 hover:text-blue-400 transition-colors py-2"
+                className="text-dark-text-secondary hover:text-blue-400 transition-colors py-2"
                 onClick={() => setMobileMenuOpen(false)}
               >
                 Documentation

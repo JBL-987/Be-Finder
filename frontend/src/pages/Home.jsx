@@ -98,11 +98,11 @@ export default function Home({ login }) {
 
   return (
     <main className="overflow-hidden">
-      <div className="bg-black text-white">
+      <div className="bg-dark-bg text-dark-text-primary">
         {/* Hero Section */}
         <section className="min-h-screen relative flex flex-col justify-center items-center p-4 pt-16">
           <div className="absolute inset-0 z-0">
-            <div className="absolute inset-0 bg-gradient-to-br from-blue-900/30 via-purple-900/20 to-black"></div>
+            <div className="absolute inset-0 bg-gradient-to-br from-blue-900/30 via-purple-900/20 to-dark-bg"></div>
             <div className="absolute top-20 left-10 w-2 h-2 bg-blue-400 rounded-full animate-pulse"></div>
             <div className="absolute top-32 right-20 w-3 h-3 bg-purple-400 rounded-full animate-pulse delay-300"></div>
             <div className="absolute bottom-40 left-1/4 w-1 h-1 bg-pink-400 rounded-full animate-pulse delay-700"></div>
@@ -118,8 +118,8 @@ export default function Home({ login }) {
             <h1 className="text-6xl md:text-8xl font-bold mb-6 bg-gradient-to-r from-blue-400 via-purple-500 to-pink-500 bg-clip-text text-transparent leading-tight">
               Find Your Perfect Business Location
             </h1>
-            <p className="text-xl md:text-2xl mb-8 text-gray-300 max-w-4xl mx-auto leading-relaxed">
-              Locatify uses advanced AI and real-time data to predict the best locations for your business. 
+            <p className="text-xl md:text-2xl mb-8 text-dark-text-secondary max-w-4xl mx-auto leading-relaxed">
+              Be-Finder uses advanced AI and real-time data to predict the best locations for your business. 
               Get recommendations based on demographics, foot traffic, competition, and market trends.
             </p>
             <div className="flex flex-col sm:flex-row gap-4 justify-center mb-12">
@@ -146,7 +146,7 @@ export default function Home({ login }) {
                   <div className="text-3xl font-bold bg-gradient-to-r from-blue-400 to-purple-400 bg-clip-text text-transparent">
                     {stat.number}
                   </div>
-                  <div className="text-sm text-gray-400">{stat.label}</div>
+                  <div className="text-sm text-dark-text-secondary">{stat.label}</div>
                 </div>
               ))}
             </div>
@@ -160,7 +160,7 @@ export default function Home({ login }) {
               <h2 className="text-4xl md:text-5xl font-bold mb-4 bg-gradient-to-r from-blue-400 to-purple-600 bg-clip-text text-transparent">
                 Powered by Advanced AI
               </h2>
-              <p className="text-xl text-gray-300 max-w-3xl mx-auto">
+              <p className="text-xl text-dark-text-secondary max-w-3xl mx-auto">
                 Our intelligent system analyzes millions of data points to give you the most accurate location recommendations
               </p>
             </div>
@@ -173,13 +173,13 @@ export default function Home({ login }) {
                   className={`p-6 rounded-xl transition-all ${
                     activeTab === feature.id
                       ? "bg-gradient-to-r from-blue-900/50 to-purple-900/50 border border-blue-500/50 transform scale-105"
-                      : "bg-gray-900/50 hover:bg-gray-800/50"
+                      : "bg-dark-surface/50 hover:bg-dark-bg/50"
                   }`}
                 >
                   <div className="flex flex-col items-center text-center">
                     <div
                       className={`p-4 rounded-full mb-4 ${
-                        activeTab === feature.id ? "bg-blue-600" : "bg-gray-800"
+                        activeTab === feature.id ? "bg-blue-600" : "bg-dark-bg"
                       }`}
                     >
                       {feature.icon}
@@ -187,20 +187,20 @@ export default function Home({ login }) {
                     <h3 className="text-xl font-semibold mb-2">
                       {feature.title}
                     </h3>
-                    <p className="text-gray-400 text-sm">{feature.description}</p>
+                    <p className="text-dark-text-secondary text-sm">{feature.description}</p>
                   </div>
                 </button>
               ))}
             </div>
 
-            <div className="bg-gradient-to-r from-blue-900/30 to-purple-900/30 rounded-2xl p-8 border border-blue-500/20">
+            <div className="bg-gradient-to-r from-blue-900/30 to-purple-900/30 rounded-2xl p-8 border-dark-border">
               {activeTab === "analyze" && (
                 <div className="grid md:grid-cols-2 gap-8 items-center">
                   <div>
                     <h3 className="text-3xl font-bold mb-4 text-blue-400">
                       AI Market Analysis
                     </h3>
-                    <p className="text-gray-300 mb-6 text-lg">
+                    <p className="text-dark-text-secondary mb-6 text-lg">
                       Our advanced AI algorithms process real-time market data, demographic information, 
                       and economic indicators to provide comprehensive location analysis for any business type.
                     </p>
@@ -224,8 +224,8 @@ export default function Home({ login }) {
                     </ul>
                   </div>
                   <div className="relative">
-                    <div className="bg-gradient-to-br from-blue-900/40 to-purple-900/40 rounded-xl p-6 border border-blue-500/20">
-                      <div className="aspect-square bg-black/50 rounded-lg flex items-center justify-center relative overflow-hidden">
+                    <div className="bg-gradient-to-br from-blue-900/40 to-purple-900/40 rounded-xl p-6 border-dark-border">
+                      <div className="aspect-square bg-dark-bg/50 rounded-lg flex items-center justify-center relative overflow-hidden">
                         <Brain className="h-24 w-24 text-blue-400 opacity-70" />
                         <div className="absolute inset-0 bg-gradient-to-r from-blue-400/10 to-purple-400/10 animate-pulse"></div>
                       </div>
@@ -240,7 +240,7 @@ export default function Home({ login }) {
                     <h3 className="text-3xl font-bold mb-4 text-blue-400">
                       Success Prediction
                     </h3>
-                    <p className="text-gray-300 mb-6 text-lg">
+                    <p className="text-dark-text-secondary mb-6 text-lg">
                       Leverage machine learning models trained on thousands of successful businesses 
                       to predict your potential success rate at any location.
                     </p>
@@ -264,8 +264,8 @@ export default function Home({ login }) {
                     </ul>
                   </div>
                   <div className="relative">
-                    <div className="bg-gradient-to-br from-blue-900/40 to-purple-900/40 rounded-xl p-6 border border-blue-500/20">
-                      <div className="aspect-square bg-black/50 rounded-lg flex items-center justify-center relative">
+                    <div className="bg-gradient-to-br from-blue-900/40 to-purple-900/40 rounded-xl p-6 border-dark-border">
+                      <div className="aspect-square bg-dark-bg/50 rounded-lg flex items-center justify-center relative">
                         <TrendingUp className="h-24 w-24 text-green-400 opacity-70" />
                         <div className="absolute bottom-4 left-4 right-4 h-2 bg-green-500/20 rounded-full">
                           <div className="h-full bg-green-500 rounded-full w-3/4 animate-pulse"></div>
@@ -282,7 +282,7 @@ export default function Home({ login }) {
                     <h3 className="text-3xl font-bold mb-4 text-blue-400">
                       Interactive Maps
                     </h3>
-                    <p className="text-gray-300 mb-6 text-lg">
+                    <p className="text-dark-text-secondary mb-6 text-lg">
                       Visualize location data through interactive maps with layers showing demographics, 
                       competition, foot traffic, and more to make informed decisions.
                     </p>
@@ -306,8 +306,8 @@ export default function Home({ login }) {
                     </ul>
                   </div>
                   <div className="relative">
-                    <div className="bg-gradient-to-br from-blue-900/40 to-purple-900/40 rounded-xl p-6 border border-blue-500/20">
-                      <div className="aspect-square bg-black/50 rounded-lg flex items-center justify-center relative">
+                    <div className="bg-gradient-to-br from-blue-900/40 to-purple-900/40 rounded-xl p-6 border-dark-border">
+                      <div className="aspect-square bg-dark-bg/50 rounded-lg flex items-center justify-center relative">
                         <Globe className="h-24 w-24 text-blue-400 opacity-70" />
                         <div className="absolute top-4 left-4 w-3 h-3 bg-red-500 rounded-full animate-ping"></div>
                         <div className="absolute bottom-6 right-6 w-2 h-2 bg-green-500 rounded-full animate-ping delay-300"></div>
@@ -324,7 +324,7 @@ export default function Home({ login }) {
                     <h3 className="text-3xl font-bold mb-4 text-blue-400">
                       Location Optimization
                     </h3>
-                    <p className="text-gray-300 mb-6 text-lg">
+                    <p className="text-dark-text-secondary mb-6 text-lg">
                       Get personalized location recommendations based on your business type, budget, 
                       and specific requirements using our optimization algorithms.
                     </p>
@@ -348,8 +348,8 @@ export default function Home({ login }) {
                     </ul>
                   </div>
                   <div className="relative">
-                    <div className="bg-gradient-to-br from-blue-900/40 to-purple-900/40 rounded-xl p-6 border border-blue-500/20">
-                      <div className="aspect-square bg-black/50 rounded-lg flex items-center justify-center relative">
+                    <div className="bg-gradient-to-br from-blue-900/40 to-purple-900/40 rounded-xl p-6 border-dark-border">
+                      <div className="aspect-square bg-dark-bg/50 rounded-lg flex items-center justify-center relative">
                         <Target className="h-24 w-24 text-purple-400 opacity-70" />
                         <div className="absolute inset-8 border-2 border-purple-500/30 rounded-full animate-pulse"></div>
                         <div className="absolute inset-12 border-2 border-purple-500/20 rounded-full animate-pulse delay-300"></div>
@@ -366,10 +366,10 @@ export default function Home({ login }) {
         <section id="benefits" className="py-20 px-4">
           <div className="max-w-6xl mx-auto">
             <h2 className="text-4xl md:text-5xl font-bold mb-12 text-center bg-gradient-to-r from-blue-400 to-purple-600 bg-clip-text text-transparent">
-              Why Choose Locatify?
+              Why Choose Be-Finder?
             </h2>
             <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
-              <div className="bg-gradient-to-br from-blue-900/20 to-purple-900/20 p-8 rounded-2xl border border-blue-500/20">
+              <div className="bg-gradient-to-br from-blue-900/20 to-purple-900/20 p-8 rounded-2xl border-dark-border">
                 <h3 className="text-2xl font-bold mb-6 text-blue-400">
                   Business Benefits
                 </h3>
@@ -377,48 +377,48 @@ export default function Home({ login }) {
                   {benefits.map((benefit, index) => (
                     <li key={index} className="flex items-start">
                       <CheckCircle2 className="h-5 w-5 text-green-500 mr-3 mt-0.5 flex-shrink-0" />
-                      <span className="text-gray-300">{benefit}</span>
+                      <span className="text-dark-text-secondary">{benefit}</span>
                     </li>
                   ))}
                 </ul>
               </div>
 
-              <div className="bg-gradient-to-br from-blue-900/20 to-purple-900/20 p-8 rounded-2xl border border-blue-500/20">
+              <div className="bg-gradient-to-br from-blue-900/20 to-purple-900/20 p-8 rounded-2xl border-dark-border">
                 <h3 className="text-2xl font-bold mb-6 text-blue-400">
                   Powered By Advanced Tech
                 </h3>
                 <div className="space-y-4">
-                  <div className="flex items-center p-4 bg-black/30 rounded-lg">
+                  <div className="flex items-center p-4 bg-dark-bg/30 rounded-lg">
                     <div className="w-12 h-12 bg-gradient-to-r from-blue-600 to-purple-600 rounded-full flex items-center justify-center mr-4">
                       <Brain className="h-6 w-6" />
                     </div>
                     <div>
                       <h4 className="font-semibold">Machine Learning AI</h4>
-                      <p className="text-sm text-gray-400">
+                      <p className="text-sm text-dark-text-secondary">
                         Advanced algorithms for location analysis
                       </p>
                     </div>
                   </div>
 
-                  <div className="flex items-center p-4 bg-black/30 rounded-lg">
+                  <div className="flex items-center p-4 bg-dark-bg/30 rounded-lg">
                     <div className="w-12 h-12 bg-gradient-to-r from-green-600 to-blue-600 rounded-full flex items-center justify-center mr-4">
                       <Globe className="h-6 w-6" />
                     </div>
                     <div>
                       <h4 className="font-semibold">Real-time Data</h4>
-                      <p className="text-sm text-gray-400">
+                      <p className="text-sm text-dark-text-secondary">
                         Live market and demographic information
                       </p>
                     </div>
                   </div>
 
-                  <div className="flex items-center p-4 bg-black/30 rounded-lg">
+                  <div className="flex items-center p-4 bg-dark-bg/30 rounded-lg">
                     <div className="w-12 h-12 bg-gradient-to-r from-purple-600 to-pink-600 rounded-full flex items-center justify-center mr-4">
                       <BarChart3 className="h-6 w-6" />
                     </div>
                     <div>
                       <h4 className="font-semibold">Predictive Analytics</h4>
-                      <p className="text-sm text-gray-400">
+                      <p className="text-sm text-dark-text-secondary">
                         Forecast business success potential
                       </p>
                     </div>
@@ -439,14 +439,14 @@ export default function Home({ login }) {
               {testimonials.map((testimonial, index) => (
                 <div
                   key={index}
-                  className="bg-gradient-to-br from-blue-900/20 to-purple-900/20 p-6 rounded-xl border border-blue-500/20 hover:transform hover:scale-105 transition-all"
+                  className="bg-gradient-to-br from-blue-900/20 to-purple-900/20 p-6 rounded-xl border-dark-border hover:transform hover:scale-105 transition-all"
                 >
                   <div className="flex mb-4">
                     {[...Array(testimonial.rating)].map((_, i) => (
                       <Star key={i} className="h-5 w-5 fill-yellow-400 text-yellow-400" />
                     ))}
                   </div>
-                  <p className="text-gray-300 mb-6 italic">
+                  <p className="text-dark-text-secondary mb-6 italic">
                     "{testimonial.quote}"
                   </p>
                   <p className="font-semibold text-blue-400">
@@ -463,8 +463,8 @@ export default function Home({ login }) {
             <h2 className="text-4xl md:text-5xl font-bold mb-6 bg-gradient-to-r from-blue-400 to-purple-600 bg-clip-text text-transparent">
               Ready to Find Your Perfect Location?
             </h2>
-            <p className="text-xl text-gray-300 mb-8">
-              Join thousands of successful businesses that found their ideal location with Locatify's AI-powered recommendations.
+            <p className="text-xl text-dark-text-secondary mb-8">
+              Join thousands of successful businesses that found their ideal location with Be-Finder's AI-powered recommendations.
             </p>
             <button
               onClick={handleLogin}

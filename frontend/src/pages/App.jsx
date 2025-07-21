@@ -27,7 +27,7 @@ const App = ({ actor, isAuthenticated, login }) => {
     const [mobileSidebarOpen, setMobileSidebarOpen] = useState(false); 
     const [currentChat, setCurrentChat] = useState([
       { 
-        system: { content: "I'm Locatify's AI assistant living on the Internet Computer. I'm here to help you find strategic locations. Ask about locations, area analysis, or business insights!" }
+        system: { content: "I'm Be-Finder's AI assistant living on the Internet Computer. I'm here to help you find strategic locations. Ask about locations, area analysis, or business insights!" }
       }
     ]);
     const chatBoxRef = useRef(null);
@@ -293,7 +293,7 @@ const App = ({ actor, isAuthenticated, login }) => {
         lastMessage: "",
         timestamp: Date.now(),
         messages: [
-          { system: { content: "I'm Locatify's AI assistant living on the Internet Computer. I'm here to help you find strategic locations. Ask about locations, area analysis, or business insights!" } }
+          { system: { content: "I'm Be-Finder's AI assistant living on the Internet Computer. I'm here to help you find strategic locations. Ask about locations, area analysis, or business insights!" } }
         ]
       };
       
@@ -430,7 +430,7 @@ const App = ({ actor, isAuthenticated, login }) => {
     }, []);
   
     return (
-      <div className="h-screen pt-16 bg-black text-white flex flex-col overflow-hidden">
+      <div className="h-screen pt-16 bg-dark-bg text-dark-text-primary flex flex-col overflow-hidden">
         {/* Mobile Header */}
         <MobileHeader setMobileSidebarOpen={setMobileSidebarOpen} />
   
