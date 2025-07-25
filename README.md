@@ -1,27 +1,135 @@
-# FileVault
+# Be-Finder
 
-FileVault is a file storage application that allows you to upload files from your local computer and store them onchain. FileVault uses Internet Identity (II) for user login and authentication. Once files are uploaded, they can be downloaded at a later time, or they can be deleted.
+Be-Finder adalah platform kecerdasan lokasi yang dibangun di Internet Computer (ICP) yang membantu pengguna menemukan lokasi strategis untuk bisnis. Platform ini menggabungkan pemetaan interaktif, analisis lokasi berbasis AI, dan visualisasi data untuk memberikan wawasan dalam pengambilan keputusan lokasi bisnis.
 
-## Deploying from ICP Ninja
+## Fitur
 
-When viewing this project in ICP Ninja, you can deploy it directly to the mainnet for free by clicking "Run" in the upper right corner. Open this project in ICP Ninja:
+- **Peta Interaktif**: Jelajahi lokasi dengan antarmuka peta interaktif yang didukung oleh Leaflet
+- **Asisten AI**: Berkomunikasi dengan asisten AI yang khusus dalam analisis lokasi dan wawasan bisnis
+- **Dashboard Analitik**: Visualisasikan data dan metrik lokasi
+- **Laporan**: Buat dan lihat laporan lokasi yang detail
+- **Manajemen Data**: Unggah dan kelola file data lokasi
+- **Autentikasi Aman**: Login dengan Internet Identity (II)
 
-[![](https://icp.ninja/assets/open.svg)](https://icp.ninja/i?g=https://github.com/JBL-987/Locatify)
+## Teknologi
 
-## Build and deploy from the command-line
+- **Backend**: Motoko di Internet Computer
+- **Frontend**: React, Vite, Tailwind CSS
+- **Layanan Peta**: Leaflet dengan OpenStreetMap
+- **Integrasi AI**: OpenRouter API
+- **Autentikasi**: Internet Identity
 
-### 1. [Download and install the IC SDK.](https://internetcomputer.org/docs/building-apps/getting-started/install)
+## Memulai
 
-### 2. Download your project from ICP Ninja using the 'Download files' button on the upper left corner, or [clone the GitHub examples repository.](https://github.com/dfinity/examples/)
+### Prasyarat
 
-### 3. Navigate into the project's directory.
+- [Node.js](https://nodejs.org/) (v14 atau lebih baru)
+- [DFX](https://internetcomputer.org/docs/current/developer-tools/dfx/install/) (DFINITY Canister SDK)
+- [Mops](https://docs.mops.one/quick-start#2-install-mops-cli) (Motoko Package Manager): `npm i -g ic-mops`
 
-### 4. Deploy the project to your local environment:
+### Pengembangan Lokal
 
+1. Clone repositori:
+
+```bash
+git clone https://github.com/username-anda/Be-Finder.git
+cd Be-Finder
 ```
-dfx start --background --clean && dfx deploy
+
+2. Instal dependensi:
+
+```bash
+npm install
 ```
 
-## Security considerations and best practices
+3. Mulai replica Internet Computer lokal:
 
-If you base your application on this example, it is recommended that you familiarize yourself with and adhere to the [security best practices](https://internetcomputer.org/docs/building-apps/security/overview) for developing on ICP. This example may not implement all the best practices.
+```bash
+dfx start --background --clean
+```
+
+4. Deploy canister ke replica lokal:
+
+```bash
+dfx deploy
+```
+
+5. Mulai server pengembangan frontend:
+
+```bash
+npm run dev
+```
+
+6. Buka browser Anda dan navigasikan ke URL yang ditampilkan di terminal (biasanya http://localhost:5173)
+
+## Deployment ke Internet Computer
+
+### 1. Buat identitas pengembang
+
+```bash
+dfx identity new identitas-saya
+dfx identity use identitas-saya
+```
+
+### 2. Dapatkan cycles
+
+Anda akan membutuhkan cycles untuk deploy ke mainnet. Anda dapat mengkonversi token ICP menjadi cycles:
+
+```bash
+dfx ledger create-canister <principal-id> --amount <jumlah-icp>
+dfx canister deposit-cycles <jumlah-cycles> <canister-id>
+```
+
+### 3. Deploy ke mainnet
+
+```bash
+dfx deploy --network ic
+```
+
+## Struktur Proyek
+
+- `/backend`: Kode canister Motoko
+- `/frontend`: Aplikasi frontend React
+  - `/src/components`: Komponen UI
+  - `/src/pages`: Halaman aplikasi
+  - `/src/services`: Integrasi layanan (Map, OpenRouter)
+
+## Menggunakan Be-Finder
+
+### Autentikasi
+
+Be-Finder menggunakan Internet Identity untuk autentikasi yang aman. Klik tombol "Login" untuk mengautentikasi dengan Internet Identity Anda.
+
+### Navigasi Peta
+
+- Gunakan antarmuka peta untuk menjelajahi lokasi
+- Cari alamat atau area tertentu
+- Tambahkan penanda untuk lokasi bisnis potensial
+- Lihat detail lokasi dengan mengklik penanda
+
+### Asisten AI
+
+- Berkomunikasi dengan asisten AI untuk mendapatkan rekomendasi lokasi
+- Ajukan pertanyaan tentang demografi area, lalu lintas pejalan kaki, atau potensi bisnis
+- Minta analisis lokasi tertentu
+
+### Manajemen Data
+
+- Unggah file data lokasi untuk analisis
+- Lihat dan kelola file yang Anda unggah
+- Unduh atau hapus file sesuai kebutuhan
+
+## Pertimbangan Keamanan
+
+Jika Anda menggunakan aplikasi ini sebagai contoh, disarankan agar Anda memahami dan mematuhi [praktik keamanan terbaik](https://internetcomputer.org/docs/building-apps/security/overview) untuk pengembangan di ICP. Contoh ini mungkin tidak menerapkan semua praktik terbaik.
+
+## Lisensi
+
+[Lisensi MIT](LICENSE)
+
+## Ucapan Terima Kasih
+
+- [Internet Computer](https://internetcomputer.org/)
+- [DFINITY Foundation](https://dfinity.org/)
+- [OpenStreetMap](https://www.openstreetmap.org/)
+- [Leaflet](https://leafletjs.com/)
