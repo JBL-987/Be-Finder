@@ -779,7 +779,7 @@ const BusinessAnalysisApp = ({ user, logout }) => {
               <div className="bg-gray-700/80 p-3 rounded-lg text-center">
                 <Users className="h-6 w-6 mx-auto mb-1 text-blue-400" />
                 <div className="text-xl font-bold text-white">{analysisResults.metrics?.tppd || 'N/A'}</div>
-                <div className="text-xs text-gray-400">Pelanggan/Hari</div>
+                <div className="text-xs text-gray-400">Customer/day</div>
               </div>
 
               <div className="bg-gray-700/80 p-3 rounded-lg text-center">
@@ -787,7 +787,7 @@ const BusinessAnalysisApp = ({ user, logout }) => {
                 <div className="text-xl font-bold text-white">
                   {analysisResults.metrics?.dailyRevenue ? `Rp${analysisResults.metrics.dailyRevenue.toLocaleString()}` : 'N/A'}
                 </div>
-                <div className="text-xs text-gray-400">Omzet Harian</div>
+                <div className="text-xs text-gray-400">Daily Revenue</div>
               </div>
 
               <div className="bg-gray-700/80 p-3 rounded-lg text-center">
@@ -795,7 +795,7 @@ const BusinessAnalysisApp = ({ user, logout }) => {
                 <div className="text-xl font-bold text-white">
                   {analysisResults.metrics?.monthlyRevenue ? `Rp${analysisResults.metrics.monthlyRevenue.toLocaleString()}` : 'N/A'}
                 </div>
-                <div className="text-xs text-gray-400">Omzet Bulanan</div>
+                <div className="text-xs text-gray-400">Monthly Revenue</div>
               </div>
 
               <div className="bg-gray-700/80 p-3 rounded-lg text-center">
@@ -804,7 +804,7 @@ const BusinessAnalysisApp = ({ user, logout }) => {
                   {analysisResults.metrics?.monthlyRevenue ?
                     Math.min(10, Math.max(1, Math.round((analysisResults.metrics.monthlyRevenue / 1000000) * 2))) : 'N/A'}/10
                 </div>
-                <div className="text-xs text-gray-400">Skor Profitabilitas</div>
+                <div className="text-xs text-gray-400">Profitability Score</div>
               </div>
             </div>
 
