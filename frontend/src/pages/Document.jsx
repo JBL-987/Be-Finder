@@ -11,66 +11,66 @@ const Documentation = () => {
       title: 'Getting Started',
       icon: Book,
       content: {
-        title: 'Getting Started with Locatify',
-        description: 'Welcome to Locatify! This guide will help you get up and running quickly.',
+        title: 'Getting Started with Be-Finder',
+        description: 'Welcome to Be-Finder! This guide will help you analyze business locations quickly and effectively.',
         steps: [
-          'Create your account and verify your email',
-          'Connect your bank accounts and financial sources',
-          'Set up your business profile and preferences',
-          'Import your existing transaction data',
-          'Configure AI categorization rules',
-          'Start processing transactions automatically'
+          'Login with Internet Identity for secure access',
+          'Navigate to the analysis page and select a location on the map',
+          'Input your business parameters (building width, operating hours, product price)',
+          'Wait for AI analysis to process the location screenshot',
+          'Review the profitability analysis and customer predictions',
+          'Use the insights to make informed location decisions'
         ]
       }
     },
     {
-      id: 'api-reference',
-      title: 'API Reference',
+      id: 'analysis-guide',
+      title: 'Analysis Guide',
       icon: Code,
       content: {
-        title: 'API Documentation',
-        description: 'Complete reference for the Locatify API endpoints and authentication.',
+        title: 'Understanding Your Analysis Results',
+        description: 'Learn how to interpret the AI-powered analysis results and make data-driven decisions.',
         steps: [
-          'Authentication: Use API keys for secure access',
-          'Transactions: Create, read, update, and delete transactions',
-          'Categories: Manage transaction categories',
-          'Reports: Generate financial reports programmatically',
-          'Webhooks: Receive real-time notifications',
-          'Rate Limits: Understand API usage limits'
+          'Area Distribution: Understand residential, road, and open space percentages',
+          'Customer Predictions: Interpret daily customer traffic estimates',
+          'Profitability Score: Use the 1-10 scale to evaluate location potential',
+          'Kenny Chart Methodology: Learn about the 12-step calculation process',
+          'Location Factors: Consider population density and traffic patterns',
+          'Business Parameters: Optimize building width, hours, and pricing inputs'
         ]
       }
     },
     {
-      id: 'configuration',
-      title: 'Configuration',
+      id: 'best-practices',
+      title: 'Best Practices',
       icon: Settings,
       content: {
-        title: 'System Configuration',
-        description: 'Configure Locatify to match your business requirements.',
+        title: 'Best Practices for Location Analysis',
+        description: 'Tips and recommendations to get the most accurate results from Be-Finder.',
         steps: [
-          'Account Settings: Manage your profile and preferences',
-          'Integration Setup: Connect with third-party services',
-          'AI Training: Customize AI categorization rules',
-          'Security Settings: Configure two-factor authentication',
-          'Notification Preferences: Set up alerts and reports',
-          'Data Export: Schedule automated backups'
+          'Location Selection: Choose clear, representative areas for analysis',
+          'Photo Quality: Ensure map screenshots are clear and properly scaled',
+          'Parameter Input: Use realistic business parameters for accurate predictions',
+          'Multiple Analyses: Compare different locations for better decision making',
+          'Time Considerations: Factor in peak hours and seasonal variations',
+          'Local Context: Consider local regulations and competition factors'
         ]
       }
     },
     {
-      id: 'team-management',
-      title: 'Team Management',
+      id: 'troubleshooting',
+      title: 'Troubleshooting',
       icon: Users,
       content: {
-        title: 'Managing Your Team',
-        description: 'Add team members and manage access permissions.',
+        title: 'Common Issues and Solutions',
+        description: 'Resolve common problems and get help when you need it.',
         steps: [
-          'Invite Team Members: Send invitations via email',
-          'Role Assignment: Set up different permission levels',
-          'Access Control: Define what each role can access',
-          'Audit Logs: Track team member activities',
-          'Collaboration Tools: Share reports and insights',
-          'User Management: Deactivate or remove users'
+          'Login Issues: Troubleshoot Internet Identity authentication problems',
+          'Map Loading: Fix issues with map display and location selection',
+          'Analysis Errors: Resolve AI analysis failures and timeout issues',
+          'Result Interpretation: Understand unexpected or unusual results',
+          'Performance: Optimize analysis speed and browser compatibility',
+          'Support: Contact our team for additional assistance'
         ]
       }
     }
@@ -87,11 +87,11 @@ const Documentation = () => {
     <div className="min-h-screen bg-dark-bg text-dark-text-primary pt-20">
       <div className="max-w-7xl mx-auto px-4 py-12">
         <div className="text-center mb-12">
-          <h1 className="text-4xl md:text-6xl font-bold mb-6 bg-gradient-to-r from-blue-400 to-purple-600 bg-clip-text text-transparent">
+          <h1 className="text-4xl md:text-6xl font-bold mb-6 bg-gradient-to-r from-green-400 to-blue-600 bg-clip-text text-transparent">
             Documentation
           </h1>
           <p className="text-xl text-dark-text-secondary max-w-3xl mx-auto">
-            Everything you need to know about using Locatify effectively
+            Everything you need to know about using Be-Finder effectively
           </p>
         </div>
 
@@ -112,7 +112,7 @@ const Documentation = () => {
           {/* Sidebar */}
           <div className="lg:col-span-1">
             <div className="bg-dark-surface/50 rounded-lg p-6 border-dark-border sticky top-24">
-              <h3 className="text-lg font-semibold mb-4 text-blue-400">Contents</h3>
+              <h3 className="text-lg font-semibold mb-4 text-green-400">Contents</h3>
               <nav className="space-y-2">
                 {filteredSections.map((section) => {
                   const Icon = section.icon;
@@ -122,7 +122,7 @@ const Documentation = () => {
                       onClick={() => setActiveSection(section.id)}
                       className={`w-full flex items-center space-x-3 px-3 py-2 rounded-lg text-left transition-all ${
                         activeSection === section.id
-                          ? 'bg-blue-600 text-white'
+                          ? 'bg-green-600 text-white'
                           : 'text-dark-text-secondary hover:bg-dark-bg'
                       }`}
                     >
@@ -144,8 +144,8 @@ const Documentation = () => {
               <div className="bg-dark-surface/50 rounded-lg p-8 border-dark-border">
                 <div className="mb-8">
                   <div className="flex items-center space-x-3 mb-4">
-                    <div className="p-2 bg-blue-600/20 rounded-lg">
-                      <activeContent.icon className="text-blue-400" size={24} />
+                    <div className="p-2 bg-green-600/20 rounded-lg">
+                      <activeContent.icon className="text-green-400" size={24} />
                     </div>
                     <h2 className="text-3xl font-bold text-white">
                       {activeContent.content.title}
@@ -157,7 +157,7 @@ const Documentation = () => {
                 </div>
 
                 <div className="space-y-6">
-                  <h3 className="text-xl font-semibold text-blue-400 mb-4">
+                  <h3 className="text-xl font-semibold text-green-400 mb-4">
                     Step-by-step guide:
                   </h3>
                   <div className="space-y-4">
@@ -166,7 +166,7 @@ const Documentation = () => {
                         key={index}
                         className="flex items-start space-x-4 p-4 bg-dark-bg/50 rounded-lg border-dark-border/50 hover:border-blue-500/50 transition-all"
                       >
-                        <div className="flex-shrink-0 w-8 h-8 bg-blue-600 rounded-full flex items-center justify-center text-white font-semibold text-sm">
+                        <div className="flex-shrink-0 w-8 h-8 bg-green-600 rounded-full flex items-center justify-center text-white font-semibold text-sm">
                           {index + 1}
                         </div>
                         <div className="flex-1">
@@ -180,15 +180,15 @@ const Documentation = () => {
                 </div>
 
                 {/* Additional Resources */}
-                <div className="mt-12 p-6 bg-gradient-to-r from-blue-900/20 to-purple-900/20 rounded-lg border border-blue-500/30">
-                  <h4 className="text-lg font-semibold text-blue-400 mb-3">
+                <div className="mt-12 p-6 bg-gradient-to-r from-green-900/20 to-blue-900/20 rounded-lg border border-green-500/30">
+                  <h4 className="text-lg font-semibold text-green-400 mb-3">
                     Need more help?
                   </h4>
                   <p className="text-dark-text-secondary mb-4">
                     If you're still having trouble, check out our additional resources or contact support.
                   </p>
                   <div className="flex flex-wrap gap-3">
-                    <button className="px-4 py-2 bg-blue-600 hover:bg-blue-700 rounded-lg text-white transition-colors">
+                    <button className="px-4 py-2 bg-green-600 hover:bg-green-700 rounded-lg text-white transition-colors">
                       Contact Support
                     </button>
                     <button className="px-4 py-2 bg-dark-border hover:bg-dark-bg rounded-lg text-white transition-colors">

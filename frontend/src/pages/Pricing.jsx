@@ -4,48 +4,48 @@ import { Check, Star } from "lucide-react";
 const Pricing = () => {
   const plans = [
     {
-      name: "Starter",
-      price: "$29",
-      period: "/month",
-      description: "Perfect for small businesses getting started",
+      name: "Basic",
+      price: "Free",
+      period: "",
+      description: "Perfect for individual entrepreneurs",
       features: [
-        "Up to 100 transactions/month",
-        "Basic AI categorization",
-        "Standard reporting",
+        "Up to 5 location analyses/month",
+        "Basic AI location analysis",
+        "Standard profitability reports",
         "Email support",
-        "Mobile app access"
+        "Community access"
       ],
       isPopular: false
     },
     {
       name: "Professional",
-      price: "$79",
+      price: "$29",
       period: "/month",
       description: "Ideal for growing businesses",
       features: [
-        "Up to 1,000 transactions/month",
-        "Advanced AI automation",
-        "Custom reporting",
+        "Up to 50 location analyses/month",
+        "Advanced AI insights",
+        "Detailed profitability reports",
         "Priority support",
-        "API access",
-        "Multi-user support",
-        "Blockchain verification"
+        "Export analysis results",
+        "Historical data access",
+        "Comparison tools"
       ],
       isPopular: true
     },
     {
       name: "Enterprise",
-      price: "$199",
+      price: "$99",
       period: "/month",
-      description: "For large organizations",
+      description: "For large organizations and consultants",
       features: [
-        "Unlimited transactions",
-        "Full AI suite",
-        "White-label options",
+        "Unlimited location analyses",
+        "Full AI analysis suite",
+        "White-label reports",
         "Dedicated account manager",
+        "API access",
         "Custom integrations",
-        "Advanced security",
-        "SLA guarantee",
+        "Team collaboration tools",
         "Training & onboarding"
       ],
       isPopular: false
@@ -53,23 +53,23 @@ const Pricing = () => {
   ];
 
   return (
-    <div className="min-h-screen bg-black text-white pt-20">
+    <div className="min-h-screen bg-dark-bg text-dark-text-primary pt-20">
       <div className="max-w-7xl mx-auto px-4 py-12">
         <div className="text-center mb-12">
-          <h1 className="text-4xl md:text-6xl font-bold mb-6 bg-gradient-to-r from-blue-400 to-purple-600 bg-clip-text text-transparent">
+          <h1 className="text-4xl md:text-6xl font-bold mb-6 bg-gradient-to-r from-green-400 to-blue-600 bg-clip-text text-transparent">
             Pricing Plans
           </h1>
-          <p className="text-xl text-gray-300 max-w-3xl mx-auto">
-            Choose the perfect plan for your business needs. All plans include our core AI features.
+          <p className="text-xl text-dark-text-secondary max-w-3xl mx-auto">
+            Choose the perfect plan for your business location analysis needs. All plans include AI-powered insights.
           </p>
         </div>
 
         <div className="grid md:grid-cols-3 gap-8 mb-16">
           {plans.map((plan, index) => (
-            <div key={index} className={`relative bg-gray-900/50 rounded-lg p-8 border ${plan.isPopular ? 'border-purple-500 shadow-lg shadow-purple-500/20' : 'border-blue-900/30'} hover:border-blue-500/50 transition-all duration-300`}>
+            <div key={index} className={`relative bg-dark-surface/50 rounded-lg p-8 border ${plan.isPopular ? 'border-green-500 shadow-lg shadow-green-500/20' : 'border-dark-border'} hover:border-green-500/50 transition-all duration-300`}>
               {plan.isPopular && (
                 <div className="absolute -top-4 left-1/2 transform -translate-x-1/2">
-                  <div className="bg-gradient-to-r from-purple-600 to-blue-600 text-white px-4 py-2 rounded-full text-sm font-medium flex items-center space-x-1">
+                  <div className="bg-gradient-to-r from-green-600 to-blue-600 text-white px-4 py-2 rounded-full text-sm font-medium flex items-center space-x-1">
                     <Star size={16} />
                     <span>Most Popular</span>
                   </div>
@@ -78,10 +78,10 @@ const Pricing = () => {
               
               <div className="text-center mb-8">
                 <h3 className="text-2xl font-bold mb-2 text-white">{plan.name}</h3>
-                <p className="text-gray-300 mb-4">{plan.description}</p>
+                <p className="text-dark-text-secondary mb-4">{plan.description}</p>
                 <div className="flex items-baseline justify-center mb-2">
-                  <span className="text-4xl font-bold text-blue-400">{plan.price}</span>
-                  <span className="text-gray-300 ml-1">{plan.period}</span>
+                  <span className="text-4xl font-bold text-green-400">{plan.price}</span>
+                  <span className="text-dark-text-secondary ml-1">{plan.period}</span>
                 </div>
               </div>
 
@@ -91,15 +91,15 @@ const Pricing = () => {
                     <div className="w-5 h-5 bg-green-500 rounded-full flex items-center justify-center mt-0.5">
                       <Check size={12} className="text-white" />
                     </div>
-                    <span className="text-gray-300">{feature}</span>
+                    <span className="text-dark-text-secondary">{feature}</span>
                   </li>
                 ))}
               </ul>
 
               <button className={`w-full font-medium rounded-lg text-sm px-5 py-3 text-center transition-all ${
-                plan.isPopular 
-                  ? 'bg-gradient-to-r from-purple-600 to-blue-600 hover:opacity-90' 
-                  : 'bg-gray-800 hover:bg-gray-700 text-white'
+                plan.isPopular
+                  ? 'bg-gradient-to-r from-green-600 to-blue-600 hover:opacity-90'
+                  : 'bg-dark-border hover:bg-dark-bg text-white'
               }`}>
                 Get Started
               </button>
@@ -107,50 +107,50 @@ const Pricing = () => {
           ))}
         </div>
 
-        <div className="bg-gradient-to-r from-blue-900/30 to-purple-900/30 rounded-lg p-8 border border-blue-900/30 mb-16">
+        <div className="bg-gradient-to-r from-green-900/30 to-blue-900/30 rounded-lg p-8 border border-green-800/30 mb-16">
           <div className="text-center">
-            <h2 className="text-3xl font-bold mb-4 text-blue-400">Enterprise Solutions</h2>
-            <p className="text-gray-300 mb-6 max-w-2xl mx-auto">
-              Need a custom solution? Our enterprise team can create a tailored package that fits your specific requirements.
+            <h2 className="text-3xl font-bold mb-4 text-green-400">Enterprise Solutions</h2>
+            <p className="text-dark-text-secondary mb-6 max-w-2xl mx-auto">
+              Need a custom solution? Our enterprise team can create a tailored package for your location analysis needs.
             </p>
             <div className="grid md:grid-cols-3 gap-6 mb-8">
               <div className="text-center">
-                <h3 className="text-xl font-semibold mb-2">Custom Integration</h3>
-                <p className="text-gray-300">Seamlessly integrate with your existing systems</p>
+                <h3 className="text-xl font-semibold mb-2">Custom Analysis</h3>
+                <p className="text-dark-text-secondary">Tailored location analysis for your specific industry</p>
               </div>
               <div className="text-center">
                 <h3 className="text-xl font-semibold mb-2">Dedicated Support</h3>
-                <p className="text-gray-300">24/7 priority support with dedicated account manager</p>
+                <p className="text-dark-text-secondary">24/7 priority support with dedicated account manager</p>
               </div>
               <div className="text-center">
-                <h3 className="text-xl font-semibold mb-2">Flexible Pricing</h3>
-                <p className="text-gray-300">Volume-based pricing that scales with your business</p>
+                <h3 className="text-xl font-semibold mb-2">Volume Pricing</h3>
+                <p className="text-dark-text-secondary">Flexible pricing that scales with your analysis needs</p>
               </div>
             </div>
-            <button className="bg-gradient-to-r from-blue-600 to-purple-600 hover:opacity-90 font-medium rounded-lg text-lg px-8 py-4 text-center transition-all">
+            <button className="bg-gradient-to-r from-green-600 to-blue-600 hover:opacity-90 font-medium rounded-lg text-lg px-8 py-4 text-center transition-all">
               Contact Sales
             </button>
           </div>
         </div>
 
         <div className="text-center">
-          <h2 className="text-2xl font-bold mb-4 text-purple-400">Frequently Asked Questions</h2>
+          <h2 className="text-2xl font-bold mb-4 text-green-400">Frequently Asked Questions</h2>
           <div className="grid md:grid-cols-2 gap-8 max-w-4xl mx-auto">
             <div className="text-left">
               <h3 className="text-lg font-semibold mb-2">Can I change plans anytime?</h3>
-              <p className="text-gray-300">Yes, you can upgrade or downgrade your plan at any time. Changes take effect immediately.</p>
+              <p className="text-dark-text-secondary">Yes, you can upgrade or downgrade your plan at any time. Changes take effect immediately.</p>
             </div>
             <div className="text-left">
-              <h3 className="text-lg font-semibold mb-2">Is there a free trial?</h3>
-              <p className="text-gray-300">Yes, we offer a 14-day free trial for all plans. No credit card required.</p>
+              <h3 className="text-lg font-semibold mb-2">How accurate are the analyses?</h3>
+              <p className="text-dark-text-secondary">Our AI-powered analysis achieves 95% accuracy using advanced Gemini AI and real Jakarta demographic data.</p>
             </div>
             <div className="text-left">
               <h3 className="text-lg font-semibold mb-2">What payment methods do you accept?</h3>
-              <p className="text-gray-300">We accept all major credit cards, PayPal, and bank transfers for enterprise plans.</p>
+              <p className="text-dark-text-secondary">We accept all major credit cards and digital payment methods for your convenience.</p>
             </div>
             <div className="text-left">
               <h3 className="text-lg font-semibold mb-2">Is my data secure?</h3>
-              <p className="text-gray-300">Absolutely. We use enterprise-grade encryption and blockchain technology to ensure maximum security.</p>
+              <p className="text-dark-text-secondary">Absolutely. We use enterprise-grade encryption and secure Internet Identity authentication.</p>
             </div>
           </div>
         </div>
