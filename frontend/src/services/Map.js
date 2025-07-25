@@ -16,10 +16,14 @@ export const MapConfig = {
   minZoom: 5,
   maxZoom: 18,
   
-  // Tile layer configuration
+  // Tile layer configuration - Multiple fallback options
   tileLayer: {
-    url: 'https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png',
-    attribution: '© <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
+    url: 'https://tile.openstreetmap.org/{z}/{x}/{y}.png',
+    attribution: '© <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors',
+    fallbackUrl: 'https://cartodb-basemaps-{s}.global.ssl.fastly.net/light_all/{z}/{x}/{y}.png',
+    fallbackAttribution: '&copy; <a href="http://www.openstreetmap.org/copyright">OpenStreetMap</a> &copy; <a href="http://cartodb.com/attributions">CartoDB</a>',
+    secondFallbackUrl: 'https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png',
+    secondFallbackAttribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors &copy; <a href="https://carto.com/attributions">CARTO</a>'
   },
 
   // Custom marker icons
@@ -64,10 +68,47 @@ export const MapUtils = {
       zoomControl: false // We'll add custom controls
     });
 
-    // Add tile layer
-    L.tileLayer(config.tileLayer.url, {
-      attribution: config.tileLayer.attribution
-    }).addTo(map);
+    // Add tile layer with multiple fallbacks
+    let currentTileLayer = null;
+    let fallbackAttempts = 0;
+
+    const tryTileLayer = (url, attribution) => {
+      if (currentTileLayer) {
+        map.removeLayer(currentTileLayer);
+      }
+
+      currentTileLayer = L.tileLayer(url, {
+        attribution: attribution,
+        maxZoom: 19,
+        crossOrigin: true
+      });
+
+      currentTileLayer.on('tileerror', function(error) {
+        console.warn(`Tile layer failed (attempt ${fallbackAttempts + 1}):`, error);
+        fallbackAttempts++;
+
+        if (fallbackAttempts === 1) {
+          console.log('Switching to first fallback...');
+          tryTileLayer(config.tileLayer.fallbackUrl, config.tileLayer.fallbackAttribution);
+        } else if (fallbackAttempts === 2) {
+          console.log('Switching to second fallback...');
+          tryTileLayer(config.tileLayer.secondFallbackUrl, config.tileLayer.secondFallbackAttribution);
+        } else {
+          console.error('All tile layers failed, using offline mode');
+          // Create a simple offline tile layer
+          const offlineTileLayer = L.tileLayer('data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMjU2IiBoZWlnaHQ9IjI1NiIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj4KICA8ZGVmcz4KICAgIDxwYXR0ZXJuIGlkPSJncmlkIiB3aWR0aD0iMjAiIGhlaWdodD0iMjAiIHBhdHRlcm5Vbml0cz0idXNlclNwYWNlT25Vc2UiPgogICAgICA8cGF0aCBkPSJNIDIwIDAgTCAwIDAgMCAyMCIgZmlsbD0ibm9uZSIgc3Ryb2tlPSIjY2NjIiBzdHJva2Utd2lkdGg9IjEiLz4KICAgIDwvcGF0dGVybj4KICA8L2RlZnM+CiAgPHJlY3Qgd2lkdGg9IjEwMCUiIGhlaWdodD0iMTAwJSIgZmlsbD0iI2Y5ZjlmOSIvPgogIDxyZWN0IHdpZHRoPSIxMDAlIiBoZWlnaHQ9IjEwMCUiIGZpbGw9InVybCgjZ3JpZCkiLz4KICA8dGV4dCB4PSIxMjgiIHk9IjEyOCIgdGV4dC1hbmNob3I9Im1pZGRsZSIgZm9udC1mYW1pbHk9IkFyaWFsLCBzYW5zLXNlcmlmIiBmb250LXNpemU9IjE0IiBmaWxsPSIjNjY2Ij5PZmZsaW5lIE1vZGU8L3RleHQ+Cjwvc3ZnPg==', {
+            attribution: 'Offline Mode - Map tiles unavailable'
+          });
+          map.removeLayer(currentTileLayer);
+          offlineTileLayer.addTo(map);
+        }
+      });
+
+      currentTileLayer.addTo(map);
+    };
+
+    // Start with primary tile layer
+    tryTileLayer(config.tileLayer.url, config.tileLayer.attribution);
 
     return map;
   },

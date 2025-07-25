@@ -2,6 +2,8 @@ import React, { useState, useEffect, useRef } from 'react';
 import L from 'leaflet';
 import 'leaflet/dist/leaflet.css';
 import { MapUtils, MapConfig } from '../services/Map';
+// Services imported dynamically in workflow component
+import BusinessAnalysisWorkflow from './BusinessAnalysisWorkflow';
 import {
   ChevronLeft,
   ChevronRight,
@@ -27,7 +29,9 @@ import {
   X,
   Search,
   Crosshair,
-  Settings
+  Settings,
+  Camera,
+  Calculator
 } from 'lucide-react';
 
 const MainContent = ({
@@ -53,55 +57,67 @@ const MainContent = ({
   const [radiusValue, setRadiusValue] = useState(1000); // meters
   const [showRadius, setShowRadius] = useState(false);
 
+  // Business analysis states
+  const [isAnalyzing, setIsAnalyzing] = useState(false);
+  const [analysisResults, setAnalysisResults] = useState(null);
+  const [showBusinessAnalysis, setShowBusinessAnalysis] = useState(false);
+
   // Initialize map when activeTab is 'map'
   useEffect(() => {
     if (activeTab === 'map' && mapRef.current && !mapInstanceRef.current) {
-      // Initialize map
-      mapInstanceRef.current = MapUtils.createMap('map-container', {
-        defaultCenter: MapConfig.defaultCenter,
-        defaultZoom: MapConfig.defaultZoom
-      });
+      try {
+        console.log('Initializing map...');
+        // Initialize map
+        mapInstanceRef.current = MapUtils.createMap('map-container', {
+          defaultCenter: MapConfig.defaultCenter,
+          defaultZoom: MapConfig.defaultZoom
+        });
+
+        console.log('Map initialized successfully');
+      } catch (error) {
+        console.error('Failed to initialize map:', error);
+      }
 
       // Add custom zoom controls
       L.control.zoom({
         position: 'topleft'
       }).addTo(mapInstanceRef.current);
 
-      // Map click handler
+      // Map click handler - simplified for workflow
       mapInstanceRef.current.on('click', async (e) => {
         const { lat, lng } = e.latlng;
-        
-        // Add marker
+
+        // Clear previous markers
+        markersRef.current.forEach(marker => mapInstanceRef.current.removeLayer(marker));
+        markersRef.current = [];
+
+        // Add new marker
         const marker = MapUtils.addMarker(
-          mapInstanceRef.current, 
-          lat, 
-          lng, 
+          mapInstanceRef.current,
+          lat,
+          lng,
           {
-            icon: MapConfig.markerIcons.default,
+            icon: MapConfig.markerIcons.selected,
             popup: `<div>
-              <strong>Selected Location</strong><br/>
+              <strong>Analysis Location</strong><br/>
               Lat: ${lat.toFixed(6)}<br/>
               Lng: ${lng.toFixed(6)}
             </div>`
           }
         );
 
-        // Update pin locations
-        const newLocation = { lat, lng, id: Date.now() };
-        setPinLocations(prev => [...prev, newLocation]);
         markersRef.current.push(marker);
 
-        // Reverse geocode
+        // Update selected location for workflow
+        const newLocation = { lat, lng, id: Date.now() };
+
+        // Try to get address
         try {
           const locationInfo = await MapUtils.reverseGeocode(lat, lng);
           if (locationInfo) {
-            setSelectedLocation({
-              ...newLocation,
-              address: locationInfo.display_name
-            });
-            
+            newLocation.address = locationInfo.display_name;
             marker.setPopupContent(`<div>
-              <strong>Selected Location</strong><br/>
+              <strong>Analysis Location</strong><br/>
               ${locationInfo.display_name}<br/>
               <small>Lat: ${lat.toFixed(6)}, Lng: ${lng.toFixed(6)}</small>
             </div>`);
@@ -109,6 +125,9 @@ const MainContent = ({
         } catch (error) {
           console.error('Error getting location info:', error);
         }
+
+        setSelectedLocation(newLocation);
+        setPinLocations([newLocation]);
       });
     }
 
@@ -229,16 +248,23 @@ const MainContent = ({
     if (mapInstanceRef.current) {
       markersRef.current.forEach(marker => mapInstanceRef.current.removeLayer(marker));
       markersRef.current = [];
-      
+
       if (radiusCircleRef.current) {
         mapInstanceRef.current.removeLayer(radiusCircleRef.current);
         radiusCircleRef.current = null;
       }
-      
+
       setPinLocations([]);
       setSelectedLocation(null);
       setShowRadius(false);
+      setAnalysisResults(null);
     }
+  };
+
+  // Simple function to handle analysis completion
+  const handleAnalysisComplete = (results) => {
+    setAnalysisResults(results);
+    setIsAnalyzing(false);
   };
 
   return (
@@ -288,6 +314,17 @@ const MainContent = ({
                     title="Clear all markers"
                   >
                     <X className="w-4 h-4" />
+                  </button>
+                  <button
+                    onClick={() => setShowBusinessAnalysis(!showBusinessAnalysis)}
+                    className={`p-2 rounded-lg transition-colors text-white ${
+                      showBusinessAnalysis
+                        ? 'bg-blue-600 hover:bg-blue-700'
+                        : 'bg-gray-900 hover:bg-gray-700'
+                    }`}
+                    title="Business Analysis"
+                  >
+                    <Calculator className="w-4 h-4" />
                   </button>
                   <button className="p-2 bg-gray-900 hover:bg-gray-700 rounded-lg transition-colors text-white">
                     <Navigation className="w-4 h-4" />
@@ -386,12 +423,23 @@ const MainContent = ({
 
               {/* Map Container */}
               <div className="flex-1 bg-gray-900 rounded-lg border border-gray-600 relative overflow-hidden">
-                <div 
-                  id="map-container" 
-                  ref={mapRef} 
+                <div
+                  id="map-container"
+                  ref={mapRef}
                   className="absolute inset-0 w-full h-full"
                   style={{ minHeight: '400px' }}
                 />
+
+                {/* Loading indicator */}
+                {!mapInstanceRef.current && (
+                  <div className="absolute inset-0 flex items-center justify-center bg-gray-900/80 rounded-lg z-10">
+                    <div className="text-center">
+                      <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-400 mx-auto mb-2"></div>
+                      <p className="text-sm text-gray-400">Loading map...</p>
+                      <p className="text-xs text-gray-500 mt-1">Connecting to map servers...</p>
+                    </div>
+                  </div>
+                )}
 
                 {/* Location Info Panel */}
                 {selectedLocation && (
@@ -421,6 +469,18 @@ const MainContent = ({
                   </div>
                 )}
               </div>
+
+              {/* Business Analysis Workflow */}
+              {showBusinessAnalysis && (
+                <div className="mt-6">
+                  <BusinessAnalysisWorkflow
+                    mapInstance={mapInstanceRef.current}
+                    selectedLocation={selectedLocation}
+                    onLocationSelect={setSelectedLocation}
+                    onAnalysisComplete={handleAnalysisComplete}
+                  />
+                </div>
+              )}
             </div>
           )}
 
