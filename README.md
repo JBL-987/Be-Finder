@@ -1,133 +1,133 @@
 # Be-Finder
 
-Be-Finder adalah platform kecerdasan lokasi yang dibangun di Internet Computer (ICP) yang membantu pengguna menemukan lokasi strategis untuk bisnis. Platform ini menggabungkan pemetaan interaktif, analisis lokasi berbasis AI, dan visualisasi data untuk memberikan wawasan dalam pengambilan keputusan lokasi bisnis.
+Be-Finder is a location intelligence platform built on the Internet Computer (ICP) that helps users find strategic locations for businesses. The platform combines interactive mapping, AI-powered location analysis, and data visualization to provide insights for business location decision-making.
 
-## Fitur
+## Features
 
-- **Peta Interaktif**: Jelajahi lokasi dengan antarmuka peta interaktif yang didukung oleh Leaflet
-- **Asisten AI**: Berkomunikasi dengan asisten AI yang khusus dalam analisis lokasi dan wawasan bisnis
-- **Dashboard Analitik**: Visualisasikan data dan metrik lokasi
-- **Laporan**: Buat dan lihat laporan lokasi yang detail
-- **Manajemen Data**: Unggah dan kelola file data lokasi
-- **Autentikasi Aman**: Login dengan Internet Identity (II)
+- **Interactive Map**: Explore locations with an interactive map interface powered by Leaflet
+- **AI Assistant**: Communicate with an AI assistant specialized in location analysis and business insights
+- **Analytics Dashboard**: Visualize location data and metrics
+- **Reports**: Create and view detailed location reports
+- **Data Management**: Upload and manage location data files
+- **Secure Authentication**: Login with Internet Identity (II)
 
-## Teknologi
+## Technologies
 
-- **Backend**: Motoko di Internet Computer
+- **Backend**: Motoko on Internet Computer
 - **Frontend**: React, Vite, Tailwind CSS
-- **Layanan Peta**: Leaflet dengan OpenStreetMap
-- **Integrasi AI**: OpenRouter API
-- **Autentikasi**: Internet Identity
+- **Map Services**: Leaflet with OpenStreetMap
+- **AI Integration**: OpenRouter API
+- **Authentication**: Internet Identity
 
-## Memulai
+## Getting Started
 
-### Prasyarat
+### Prerequisites
 
-- [Node.js](https://nodejs.org/) (v14 atau lebih baru)
+- [Node.js](https://nodejs.org/) (v14 or newer)
 - [DFX](https://internetcomputer.org/docs/current/developer-tools/dfx/install/) (DFINITY Canister SDK)
 - [Mops](https://docs.mops.one/quick-start#2-install-mops-cli) (Motoko Package Manager): `npm i -g ic-mops`
 
-### Pengembangan Lokal
+### Local Development
 
-1. Clone repositori:
+1. Clone the repository:
 
 ```bash
-git clone https://github.com/username-anda/Be-Finder.git
+git clone https://github.com/your-username/Be-Finder.git
 cd Be-Finder
 ```
 
-2. Instal dependensi:
+2. Install dependencies:
 
 ```bash
 npm install
 ```
 
-3. Mulai replica Internet Computer lokal:
+3. Start the local Internet Computer replica:
 
 ```bash
 dfx start --background --clean
 ```
 
-4. Deploy canister ke replica lokal:
+4. Deploy canisters to the local replica:
 
 ```bash
 dfx deploy
 ```
 
-5. Mulai server pengembangan frontend:
+5. Start the frontend development server:
 
 ```bash
 npm run dev
 ```
 
-6. Buka browser Anda dan navigasikan ke URL yang ditampilkan di terminal (biasanya http://localhost:5173)
+6. Open your browser and navigate to the URL displayed in the terminal (usually http://localhost:5173)
 
-## Deployment ke Internet Computer
+## Deployment to Internet Computer
 
-### 1. Buat identitas pengembang
-
-```bash
-dfx identity new identitas-saya
-dfx identity use identitas-saya
-```
-
-### 2. Dapatkan cycles
-
-Anda akan membutuhkan cycles untuk deploy ke mainnet. Anda dapat mengkonversi token ICP menjadi cycles:
+### 1. Create a developer identity
 
 ```bash
-dfx ledger create-canister <principal-id> --amount <jumlah-icp>
-dfx canister deposit-cycles <jumlah-cycles> <canister-id>
+dfx identity new my-identity
+dfx identity use my-identity
 ```
 
-### 3. Deploy ke mainnet
+### 2. Get cycles
+
+You will need cycles to deploy to the mainnet. You can convert ICP tokens to cycles:
+
+```bash
+dfx ledger create-canister <principal-id> --amount <icp-amount>
+dfx canister deposit-cycles <cycles-amount> <canister-id>
+```
+
+### 3. Deploy to mainnet
 
 ```bash
 dfx deploy --network ic
 ```
 
-## Struktur Proyek
+## Project Structure
 
-- `/backend`: Kode canister Motoko
-- `/frontend`: Aplikasi frontend React
-  - `/src/components`: Komponen UI
-  - `/src/pages`: Halaman aplikasi
-  - `/src/services`: Integrasi layanan (Map, OpenRouter)
+- `/backend`: Motoko canister code
+- `/frontend`: React frontend application
+  - `/src/components`: UI components
+  - `/src/pages`: Application pages
+  - `/src/services`: Service integrations (Map, OpenRouter)
 
-## Menggunakan Be-Finder
+## Using Be-Finder
 
-### Autentikasi
+### Authentication
 
-Be-Finder menggunakan Internet Identity untuk autentikasi yang aman. Klik tombol "Login" untuk mengautentikasi dengan Internet Identity Anda.
+Be-Finder uses Internet Identity for secure authentication. Click the "Login" button to authenticate with your Internet Identity.
 
-### Navigasi Peta
+### Map Navigation
 
-- Gunakan antarmuka peta untuk menjelajahi lokasi
-- Cari alamat atau area tertentu
-- Tambahkan penanda untuk lokasi bisnis potensial
-- Lihat detail lokasi dengan mengklik penanda
+- Use the map interface to explore locations
+- Search for specific addresses or areas
+- Add markers for potential business locations
+- View location details by clicking on markers
 
-### Asisten AI
+### AI Assistant
 
-- Berkomunikasi dengan asisten AI untuk mendapatkan rekomendasi lokasi
-- Ajukan pertanyaan tentang demografi area, lalu lintas pejalan kaki, atau potensi bisnis
-- Minta analisis lokasi tertentu
+- Communicate with the AI assistant to get location recommendations
+- Ask questions about area demographics, foot traffic, or business potential
+- Request analysis of specific locations
 
-### Manajemen Data
+### Data Management
 
-- Unggah file data lokasi untuk analisis
-- Lihat dan kelola file yang Anda unggah
-- Unduh atau hapus file sesuai kebutuhan
+- Upload location data files for analysis
+- View and manage your uploaded files
+- Download or delete files as needed
 
-## Pertimbangan Keamanan
+## Security Considerations
 
-Jika Anda menggunakan aplikasi ini sebagai contoh, disarankan agar Anda memahami dan mematuhi [praktik keamanan terbaik](https://internetcomputer.org/docs/building-apps/security/overview) untuk pengembangan di ICP. Contoh ini mungkin tidak menerapkan semua praktik terbaik.
+If you are using this application as an example, it is recommended that you understand and follow [security best practices](https://internetcomputer.org/docs/building-apps/security/overview) for development on ICP. This example may not implement all best practices.
 
-## Lisensi
+## License
 
-[Lisensi MIT](LICENSE)
+[MIT License](LICENSE)
 
-## Ucapan Terima Kasih
+## Acknowledgements
 
 - [Internet Computer](https://internetcomputer.org/)
 - [DFINITY Foundation](https://dfinity.org/)
