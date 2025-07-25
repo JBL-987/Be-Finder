@@ -1,7 +1,7 @@
 const OPENROUTER_API_KEY = import.meta.env.VITE_REACT_OPENROUTER_API_KEY;
 const OPENROUTER_API_URL = "https://openrouter.ai/api/v1/chat/completions";
 
-const system_prompt = `You are Locatify's advanced AI assistant, a specialized location intelligence platform powered by cutting-edge technology and living on the Internet Computer blockchain. Your primary mission is to help users discover, analyze, and optimize strategic locations for their business needs and personal requirements.
+const system_prompt = `You are Be-Finder's advanced AI assistant, a specialized location intelligence platform powered by cutting-edge technology and living on the Internet Computer blockchain. Your primary mission is to help users discover, analyze, and optimize strategic locations for their business needs and personal requirements.
 
 Your expertise spans across multiple domains:
 
@@ -49,7 +49,7 @@ export async function getChatCompletion(messages) {
         "Content-Type": "application/json",
         "Authorization": `Bearer ${OPENROUTER_API_KEY}`,
         "HTTP-Referer": window.location.origin,
-        "X-Title": "Locatify AI Assistant"
+        "X-Title": "Be-Finder AI Assistant"
       },
       body: JSON.stringify({
         model: "qwen/qwen3-235b-a22b:free",
