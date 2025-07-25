@@ -1,5 +1,5 @@
 const OPENROUTER_API_KEY = import.meta.env.VITE_REACT_OPENROUTER_API_KEY;
-const OPENROUTER_API_URL = "https://openrouter.ai/api/v1/chat/completions";
+const OPENROUTER_API_URL = "https://openrouter.ai/api/v1";
 
 const system_prompt = `You are Be-Finder's advanced AI assistant, a specialized location intelligence platform powered by cutting-edge technology and living on the Internet Computer blockchain. Your primary mission is to help users discover, analyze, and optimize strategic locations for their business needs and personal requirements.
 
@@ -52,7 +52,7 @@ export async function getChatCompletion(messages) {
         "X-Title": "Be-Finder AI Assistant"
       },
       body: JSON.stringify({
-        model: "qwen/qwen3-235b-a22b:free",
+        model: "qwen/qwen2.5-vl-72b-instruct:free",
         messages: [
           {
             role: "system",
