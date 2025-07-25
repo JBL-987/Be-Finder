@@ -9,11 +9,9 @@ import {
   CheckCircle2,
   TrendingUp,
   Users,
-  Building,
   Zap,
   Star,
   Calculator,
-
 } from "lucide-react";
 
 export default function Home({ login }) {
@@ -48,16 +46,16 @@ export default function Home({ login }) {
       metric: "Real-time Data"
     },
     {
-      icon: <TrendingUp className="h-8 w-8 text-purple-500" />,
-      title: "Proyeksi Revenue",
-      description: "Estimasi pendapatan harian, bulanan, dan tahunan berdasarkan analisis mendalam lokasi bisnis Anda",
-      metric: "ROI Calculator"
+      icon: <Brain className="h-8 w-8 text-purple-500" />,
+      title: "Analisis Profitabilitas",
+      description: "Evaluasi potensi bisnis lokasi berdasarkan data demografis dan pola lalu lintas untuk keputusan investasi yang tepat",
+      metric: "Smart Analysis"
     }
   ];
 
   const testimonials = [
     {
-      quote: "Be-Finder membantu saya menganalisis 5 lokasi berbeda. Hasilnya, toko saya di lokasi yang dipilih meraup omzet 3x lipat dari prediksi!",
+      quote: "Be-Finder membantu saya menganalisis beberapa lokasi berbeda. Platform ini sangat akurat dalam memprediksi potensi bisnis!",
       author: "Budi S., Pemilik Toko Kelontong",
       rating: 5,
     },
@@ -67,7 +65,7 @@ export default function Home({ login }) {
       rating: 5,
     },
     {
-      quote: "Platform ini menghemat waktu dan biaya riset lokasi. Dalam 5 menit saya sudah tahu potensi profit lokasi bisnis saya.",
+      quote: "Platform ini menghemat waktu dan biaya riset lokasi. Dalam 5 menit saya sudah tahu potensi bisnis lokasi saya.",
       author: "Andi K., Pemilik Cafe",
       rating: 5,
     },
@@ -76,15 +74,15 @@ export default function Home({ login }) {
   const benefits = [
     "Analisis profitabilitas lokasi dalam hitungan menit",
     "Prediksi jumlah customer harian dengan AI Gemini",
-    "Hitung proyeksi revenue bulanan dan tahunan",
+    "Evaluasi potensi bisnis berdasarkan data lokasi",
     "Analisis distribusi area residential, jalan, dan ruang terbuka",
-    "Estimasi ROI sebelum investasi lokasi bisnis",
+    "Estimasi kelayakan investasi lokasi bisnis",
     "Keputusan bisnis berbasis data yang akurat",
   ];
 
   const stats = [
     { number: "172", label: "Customer Harian", icon: <Users className="h-8 w-8" /> },
-    { number: "2.5M", label: "Revenue Bulanan", icon: <TrendingUp className="h-8 w-8" /> },
+    { number: "1000+", label: "Lokasi Dianalisis", icon: <Target className="h-8 w-8" /> },
     { number: "95%", label: "Akurasi AI", icon: <Brain className="h-8 w-8" /> },
     { number: "5 Menit", label: "Analisis Cepat", icon: <Zap className="h-8 w-8" /> },
   ];
@@ -113,7 +111,7 @@ export default function Home({ login }) {
             </h1>
             <p className="text-xl md:text-2xl mb-8 text-dark-text-secondary max-w-4xl mx-auto leading-relaxed">
               AI platform that analyzes business locations and predicts daily customers,
-              monthly revenue, and ROI with high accuracy using Gemini AI.
+              profitability potential, and business success with high accuracy using Gemini AI.
             </p>
             <div className="flex flex-col sm:flex-row gap-4 justify-center mb-12">
               <button
@@ -221,7 +219,7 @@ export default function Home({ login }) {
                   {
                     step: "4",
                     title: "Lihat Hasil",
-                    description: "Dapatkan proyeksi revenue dan rekomendasi profitabilitas lokasi",
+                    description: "Dapatkan analisis profitabilitas dan rekomendasi kelayakan lokasi bisnis",
                     icon: <BarChart3 className="h-6 w-6" />
                   }
                 ].map((item, index) => (
