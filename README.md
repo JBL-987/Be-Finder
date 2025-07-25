@@ -273,6 +273,10 @@ The platform implements a sophisticated 12-step business analysis algorithm:
 
 ## Mathematical Formulas
 
+<img width="1200" height="105" alt="image" src="https://github.com/user-attachments/assets/9cb1be1e-9eb1-4466-9a93-2913056dfcd9" />
+
+<img width="1824" height="1028" alt="image" src="https://github.com/user-attachments/assets/e935e55b-6b8e-43f4-bcdc-4f3dae26023b" />
+
 
 
 ## Security & Privacy
