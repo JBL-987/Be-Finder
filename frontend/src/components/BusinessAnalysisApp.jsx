@@ -37,17 +37,13 @@ import {
   TrendingUp,
   Users,
   DollarSign,
-  Clock,
-  Building,
   Play,
-  CheckCircle,
   AlertCircle,
   Loader,
   X,
   Search,
   Save,
   FolderOpen,
-  Upload,
   Download,
   Trash2,
   FileText,
@@ -1711,20 +1707,13 @@ const BusinessAnalysisApp = ({ actor, isAuthenticated, login, logout }) => {
                             </div>
                           </div>
                           <div className="flex items-center space-x-2 flex-shrink-0">
-                            <button
-                              onClick={() => handleFileDownload(file.name)}
-                              className="p-2 hover:bg-background rounded-lg text-green-600 hover:text-green-500 transition-colors"
-                              title="Download"
-                            >
-                              <Download className="h-4 w-4" />
-                            </button>
                             {file.fileType === 'application/pdf' && (
                               <button
                                 onClick={() => handleFileDownload(file.name)}
-                                className="p-2 hover:bg-background rounded-lg text-blue-600 hover:text-blue-500 transition-colors"
+                                className="p-2 hover:bg-background rounded-lg text-green-600 hover:text-green-500 transition-colors"
                                 title="Export PDF"
                               >
-                                <FileText className="h-4 w-4" />
+                                <Download className="h-4 w-4" />
                               </button>
                             )}
                             <button
