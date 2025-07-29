@@ -32,6 +32,11 @@ function Main() {
   const [isAuthenticated, setIsAuthenticated] = useState(false);
   const [isInitializing, setIsInitializing] = useState(true);
 
+  // Set dark mode on component mount
+  useEffect(() => {
+    document.documentElement.classList.add('dark');
+  }, []);
+
   useEffect(() => {
     const initAuth = async () => {
       try {
@@ -154,7 +159,7 @@ function Main() {
         <Route path="/Contact" element={<Contact />} />
         <Route path="*" element={<Navigate to="/" replace />} />
       </Routes>
-      <Footer_Component  isAuthenticated={isAuthenticated} />
+      <Footer_Component/>
     </Router>
   );
 }

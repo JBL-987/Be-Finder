@@ -1,8 +1,10 @@
-import React, { useState, useEffect, useRef } from 'react';
+import { useState, useEffect, useRef } from 'react';
+import Swal from 'sweetalert2';
 import L from 'leaflet';
 import 'leaflet/dist/leaflet.css';
 import { analyzeLocationImage, calculateBusinessMetrics } from '../services/gemini';
 import { captureMapScreenshot } from '../services/mapScreenshot';
+import { CURRENCIES, formatCurrency, getCurrencySymbol } from '../services/currencies';
 
 // Fix Leaflet marker icons in Vite/React
 import markerIcon from 'leaflet/dist/images/marker-icon.png';
@@ -26,6 +28,7 @@ const redMarkerIcon = new L.Icon({
   popupAnchor: [1, -34],
   shadowSize: [41, 41]
 });
+
 import {
   MapPin,
   Calculator,
@@ -42,14 +45,13 @@ import {
   Search
 } from 'lucide-react';
 
-
-
 const BusinessAnalysisApp = ({ user, logout }) => {
   const [selectedLocation, setSelectedLocation] = useState(null);
   const [businessParams, setBusinessParams] = useState({
     buildingWidth: '',
     operatingHours: '',
-    productPrice: ''
+    productPrice: '',
+    currency: 'IDR'
   });
   const [analysisResults, setAnalysisResults] = useState(null);
   const [isAnalyzing, setIsAnalyzing] = useState(false);
@@ -63,11 +65,11 @@ const BusinessAnalysisApp = ({ user, logout }) => {
   const [analysisProgress, setAnalysisProgress] = useState({
     currentStep: 0,
     steps: [
-      { id: 1, name: 'Screenshot Capture', status: 'pending', detail: 'Taking screenshot of selected area...', image: null },
+      { id: 1, name: 'Capture Screenshot', status: 'pending', detail: 'Capturing screenshot of selected area...', image: null },
       { id: 2, name: 'Send to Gemini AI', status: 'pending', detail: 'Sending image to Gemini AI (gemini-2.5-pro)...', image: null },
-      { id: 3, name: 'AI Color Analysis', status: 'pending', detail: 'AI analyzing color distribution (residential, road, open space)...', data: null },
+      { id: 3, name: 'AI Color Analysis', status: 'pending', detail: 'AI analyzing color distribution (residential, roads, open spaces)...', data: null },
       { id: 4, name: 'Area Calculation', status: 'pending', detail: 'Calculating area from screenshot dimensions and scale...', data: null },
-      { id: 5, name: 'Population Density', status: 'pending', detail: 'Calculating CGLP and population density on roads...', data: null },
+      { id: 5, name: 'Population Density', status: 'pending', detail: 'Calculating CGLP and road population density...', data: null },
       { id: 6, name: 'Traffic Analysis', status: 'pending', detail: 'Calculating APC, APT, and visitor traffic...', data: null },
       { id: 7, name: 'Revenue Projection', status: 'pending', detail: 'Calculating daily purchases and monthly revenue...', data: null },
       { id: 8, name: 'Complete', status: 'pending', detail: 'Analysis complete! Displaying results...', data: null }
@@ -75,9 +77,16 @@ const BusinessAnalysisApp = ({ user, logout }) => {
   });
 
   const progressRef = useRef(null);
-
   const mapRef = useRef(null);
   const mapInstanceRef = useRef(null);
+
+  // Dynamic step for input based on currency
+  const getInputStep = (currencyCode) => {
+    const currency = CURRENCIES[currencyCode];
+    if (!currency) return '0.01';
+    // For high-denomination currencies like IDR, VND, etc., use larger steps
+    return ['IDR', 'VND', 'KRW', 'JPY', 'IRR', 'HUF', 'CLP', 'COP', 'PYG', 'UGX', 'TZS', 'KZT', 'UZS', 'MMK', 'KHR', 'LAK', 'LBP', 'RSD', 'ISK'].includes(currencyCode) ? '1000' : '0.01';
+  };
 
   // Add custom styles for map
   useEffect(() => {
@@ -152,7 +161,7 @@ const BusinessAnalysisApp = ({ user, logout }) => {
           dragging: true
         });
 
-        console.log('Adding tile layer...');
+        console.log('Adding map layer...');
 
         // Add OpenStreetMap tiles
         const tileLayer = L.tileLayer('https://tile.openstreetmap.org/{z}/{x}/{y}.png', {
@@ -286,11 +295,27 @@ const BusinessAnalysisApp = ({ user, logout }) => {
           setSelectedLocation({ lat, lng });
         }
       } else {
-        alert('Tempat tidak ditemukan. Coba kata kunci lain.');
+        await Swal.fire({
+          icon: 'warning',
+          title: 'Location Not Found',
+          text: 'Location not found. Try different keywords.',
+          confirmButtonText: 'OK',
+          background: '#1f2937',
+          color: '#ffffff',
+          confirmButtonColor: '#3b82f6'
+        });
       }
     } catch (error) {
       console.error('Search failed:', error);
-      alert('Pencarian gagal. Coba lagi.');
+      await Swal.fire({
+        icon: 'error',
+        title: 'Search Failed',
+        text: 'Search failed. Please try again.',
+        confirmButtonText: 'OK',
+        background: '#1f2937',
+        color: '#ffffff',
+        confirmButtonColor: '#3b82f6'
+      });
     } finally {
       setIsSearching(false);
     }
@@ -329,17 +354,41 @@ const BusinessAnalysisApp = ({ user, logout }) => {
   const handleAnalysis = async () => {
     // Validate inputs
     if (!selectedLocation || !selectedLocation.lat || !selectedLocation.lng) {
-      alert('Silakan pilih lokasi di peta terlebih dahulu');
+      await Swal.fire({
+        icon: 'warning',
+        title: 'Location Not Selected',
+        text: 'Please select a location on the map first',
+        confirmButtonText: 'OK',
+        background: '#1f2937',
+        color: '#ffffff',
+        confirmButtonColor: '#3b82f6'
+      });
       return;
     }
 
     if (!businessParams.buildingWidth || !businessParams.operatingHours || !businessParams.productPrice) {
-      alert('Silakan isi semua parameter bisnis (lebar bangunan, jam operasi, harga)');
+      await Swal.fire({
+        icon: 'warning',
+        title: 'Incomplete Parameters',
+        text: 'Please fill all business parameters (building width, operating hours, price)',
+        confirmButtonText: 'OK',
+        background: '#1f2937',
+        color: '#ffffff',
+        confirmButtonColor: '#3b82f6'
+      });
       return;
     }
 
     if (!mapInstanceRef.current) {
-      alert('Peta belum siap. Silakan tunggu sebentar dan coba lagi.');
+      await Swal.fire({
+        icon: 'info',
+        title: 'Map Not Ready',
+        text: 'Map is not ready yet. Please wait a moment and try again.',
+        confirmButtonText: 'OK',
+        background: '#1f2937',
+        color: '#ffffff',
+        confirmButtonColor: '#3b82f6'
+      });
       return;
     }
 
@@ -356,7 +405,7 @@ const BusinessAnalysisApp = ({ user, logout }) => {
 
     try {
       // Step 1: Screenshot Capture (Kenny chart step 3)
-      updateProgress(1, 'active', 'Taking screenshot of selected area...');
+      updateProgress(1, 'active', 'Capturing screenshot of selected area...');
       await new Promise(resolve => setTimeout(resolve, 1000));
 
       console.log('Capturing screenshot for location:', selectedLocation);
@@ -374,19 +423,19 @@ const BusinessAnalysisApp = ({ user, logout }) => {
       updateProgress(2, 'active', 'Sending image to Gemini AI (gemini-2.5-pro)...');
       await new Promise(resolve => setTimeout(resolve, 1000));
 
-      updateProgress(2, 'completed', 'Image sent to AI successfully!', {
+      updateProgress(2, 'completed', 'Image successfully sent to AI!', {
         imageSize: `${screenshot.metadata?.width || 800}x${screenshot.metadata?.height || 600}px`,
         model: 'gemini-2.5-pro'
       });
       await new Promise(resolve => setTimeout(resolve, 500));
 
       // Step 3: AI Color Analysis (Kenny chart step 5)
-      updateProgress(3, 'active', 'AI analyzing color distribution: residential (brown), road (white/yellow), open space (green/blue/gray)...');
+      updateProgress(3, 'active', 'AI analyzing color distribution: residential (brown), roads (white/yellow), open spaces (green/blue/gray)...');
       const aiResponse = await analyzeLocationImage(screenshot.imageBase64, screenshot.metadata);
       const areaAnalysis = aiResponse.analysis; // Extract the actual analysis data
 
-      console.log('AI Response:', aiResponse);
-      console.log('Area Analysis:', areaAnalysis);
+      console.log('AI response:', aiResponse);
+      console.log('Area analysis:', areaAnalysis);
 
       updateProgress(3, 'completed', 'AI color analysis complete!', {
         residential: `${areaAnalysis.residential}%`,
@@ -401,7 +450,7 @@ const BusinessAnalysisApp = ({ user, logout }) => {
         timestamp: new Date().toISOString(),
         location: selectedLocation
       }));
-      console.log('AI analysis results stored in localStorage');
+      console.log('AI analysis results saved to localStorage');
 
       await new Promise(resolve => setTimeout(resolve, 500));
 
@@ -416,7 +465,7 @@ const BusinessAnalysisApp = ({ user, logout }) => {
       await new Promise(resolve => setTimeout(resolve, 500));
 
       // Step 5: Population Density (Kenny chart steps 7-8)
-      updateProgress(5, 'active', 'Calculating CGLP (Jakarta density × area) and population density on roads...');
+      updateProgress(5, 'active', 'Calculating CGLP (Jakarta density × area) and road population density...');
       await new Promise(resolve => setTimeout(resolve, 1000));
 
       updateProgress(5, 'completed', 'Population density calculated!', {
@@ -448,11 +497,11 @@ const BusinessAnalysisApp = ({ user, logout }) => {
         productPrice: parseFloat(businessParams.productPrice)
       }, screenshot);
 
-      console.log('Final analysis result:', analysis);
+      console.log('Final analysis results:', analysis);
 
       updateProgress(7, 'completed', 'Revenue projection complete!', {
         tppd: `${analysis.metrics?.tppd || 'N/A'} daily customers`,
-        monthlyRevenue: `Rp ${analysis.metrics?.monthlyRevenue?.toLocaleString() || 'N/A'}`
+        monthlyRevenue: `${CURRENCIES[businessParams.currency]?.symbol || ''}${analysis.metrics?.monthlyRevenue?.toLocaleString() || 'N/A'}`
       });
       await new Promise(resolve => setTimeout(resolve, 500));
 
@@ -460,7 +509,7 @@ const BusinessAnalysisApp = ({ user, logout }) => {
       updateProgress(8, 'active', 'Finalizing analysis results...');
       await new Promise(resolve => setTimeout(resolve, 1000));
 
-      updateProgress(8, 'completed', 'Analysis complete! Results ready for display.');
+      updateProgress(8, 'completed', 'Analysis complete! Results ready to display.');
 
       // Ensure the analysis results include the area distribution
       const finalResults = {
@@ -469,24 +518,47 @@ const BusinessAnalysisApp = ({ user, logout }) => {
         rawAiResponse: aiResponse.rawResponse
       };
 
-      console.log('Final results being set:', finalResults);
+      console.log('Final results to display:', finalResults);
       setAnalysisResults(finalResults);
       setCurrentStep(3);
       setShowResults(true);
+
+      // Show success notification
+      await Swal.fire({
+        icon: 'success',
+        title: 'Analysis Successful!',
+        text: 'Business profitability analysis completed.',
+        timer: 2000,
+        showConfirmButton: false,
+        background: '#1f2937',
+        color: '#ffffff'
+      });
+
     } catch (error) {
       console.error('Analysis failed:', error);
 
       // More specific error messages
-      let errorMessage = 'Analisis gagal. ';
+      let errorTitle = 'Analysis Failed';
+      let errorMessage = '';
+      
       if (error.message.includes('screenshot')) {
-        errorMessage += 'Gagal mengambil screenshot peta. Pastikan peta sudah dimuat dengan baik.';
+        errorMessage = 'Failed to capture map screenshot. Make sure the map is properly loaded.';
       } else if (error.message.includes('Gemini') || error.message.includes('AI')) {
-        errorMessage += 'Gagal menganalisis dengan AI. Silakan coba lagi.';
+        errorMessage = 'Failed to analyze with AI. Please try again.';
       } else {
-        errorMessage += 'Silakan coba lagi atau pilih lokasi lain.';
+        errorMessage = 'An error occurred during analysis. Please try again or select a different location.';
       }
 
-      alert(errorMessage);
+      await Swal.fire({
+        icon: 'error',
+        title: errorTitle,
+        text: errorMessage,
+        confirmButtonText: 'OK',
+        background: '#1f2937',
+        color: '#ffffff',
+        confirmButtonColor: '#ef4444'
+      });
+
       setCurrentStep(1);
     } finally {
       setIsAnalyzing(false);
@@ -495,7 +567,7 @@ const BusinessAnalysisApp = ({ user, logout }) => {
 
   const resetAnalysis = () => {
     setSelectedLocation(null);
-    setBusinessParams({ buildingWidth: '', operatingHours: '', productPrice: '' });
+    setBusinessParams({ buildingWidth: '', operatingHours: '', productPrice: '', currency: 'IDR' });
     setAnalysisResults(null);
     setCurrentStep(1);
     setShowResults(false);
@@ -510,50 +582,39 @@ const BusinessAnalysisApp = ({ user, logout }) => {
     }
   };
 
-  return (
-    <div className="min-h-screen bg-gray-900 text-white">
-      {/* Header */}
-      <header className="bg-gray-800 border-b border-gray-700 px-6 py-4">
-        <div className="flex items-center justify-between">
-          <div className="flex items-center space-x-4">
-            <Calculator className="h-8 w-8 text-blue-400" />
-            <h1 className="text-2xl font-bold">Business Profitability Analyzer</h1>
-          </div>
-          <div className="flex items-center space-x-4">
-            <span className="text-gray-300">Welcome, {user?.name || 'User'}</span>
-            <button
-              onClick={logout}
-              className="px-4 py-2 bg-red-600 hover:bg-red-700 rounded-lg transition-colors"
-            >
-              Logout
-            </button>
-          </div>
-        </div>
-      </header>
+  const handleCurrencyChange = (e) => {
+    setBusinessParams(prev => ({
+      ...prev,
+      currency: e.target.value,
+      productPrice: '' // Reset productPrice to avoid invalid values for new currency
+    }));
+  };
 
+  return (
+    <div className="min-h-screen bg-background text-foreground">
       <div className="flex flex-col h-[calc(100vh-80px)]">
         {/* Simplified Top Panel */}
-        <div className="bg-gray-800 border-b border-gray-700 p-3">
-          <div className="flex items-center justify-between max-w-7xl mx-auto">
+        <div className="bg-card border-b border-border p-3">
+          <div className="flex flex-col lg:flex-row items-start lg:items-center justify-between max-w-7xl mx-auto gap-4">
             {/* Search Bar */}
-            <div className="flex items-center space-x-4">
-              <form onSubmit={handleSearchSubmit} className="flex items-center space-x-2">
-                <div className="relative">
-                  <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400" />
+            <div className="flex flex-col sm:flex-row items-start sm:items-center space-y-2 sm:space-y-0 sm:space-x-4 w-full lg:w-auto">
+              <form onSubmit={handleSearchSubmit} className="flex items-center space-x-2 w-full sm:w-auto">
+                <div className="relative flex-1 sm:flex-none">
+                  <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
                   <input
                     type="text"
                     value={searchQuery}
                     onChange={(e) => setSearchQuery(e.target.value)}
-                    placeholder="Cari tempat di Jakarta..."
-                    className="pl-10 pr-4 py-2 bg-gray-700 border border-gray-600 rounded-lg text-sm focus:ring-2 focus:ring-blue-500 focus:border-transparent w-64"
+                    placeholder="Search Location"
+                    className="pl-10 pr-4 py-2 bg-background border border-input rounded-lg text-sm focus:ring-2 focus:ring-ring focus:border-transparent w-full sm:w-64"
                   />
                 </div>
                 <button
                   type="submit"
                   disabled={isSearching || !searchQuery.trim()}
-                  className="px-3 py-2 bg-blue-600 hover:bg-blue-700 disabled:bg-gray-600 disabled:cursor-not-allowed rounded-lg text-sm font-medium transition-colors"
+                  className="px-3 py-2 bg-primary hover:bg-primary/90 disabled:bg-muted disabled:cursor-not-allowed rounded-lg text-sm font-medium transition-colors text-primary-foreground"
                 >
-                  {isSearching ? <Loader className="h-4 w-4 animate-spin" /> : 'Cari'}
+                  {isSearching ? <Loader className="h-4 w-4 animate-spin" /> : 'Search'}
                 </button>
               </form>
 
@@ -561,62 +622,76 @@ const BusinessAnalysisApp = ({ user, logout }) => {
               {selectedLocation && (
                 <div className="flex items-center space-x-2 text-sm text-green-400">
                   <MapPin className="h-4 w-4" />
-                  <span>Lokasi dipilih</span>
+                  <span>Location Selected</span>
                 </div>
               )}
             </div>
 
             {/* Business Parameters - Simplified */}
-            <div className="flex items-center space-x-4">
-              <div className="flex items-center space-x-2">
+            <div className="flex flex-wrap items-center gap-2 sm:gap-4 w-full lg:w-auto">
+              <div className="flex items-center space-x-1 sm:space-x-2">
                 <input
                   type="number"
                   value={businessParams.buildingWidth}
                   onChange={(e) => setBusinessParams(prev => ({ ...prev, buildingWidth: e.target.value }))}
-                  className="w-16 px-2 py-1 bg-gray-700 border border-gray-600 rounded text-sm focus:ring-1 focus:ring-blue-500"
+                  className="w-12 sm:w-16 px-1 sm:px-2 py-1 bg-background border border-input rounded text-xs sm:text-sm focus:ring-1 focus:ring-ring"
                   placeholder="10"
                 />
-                <span className="text-xs text-gray-400">m</span>
+                <span className="text-xs text-muted-foreground">m</span>
               </div>
 
-              <div className="flex items-center space-x-2">
+              <div className="flex items-center space-x-1 sm:space-x-2">
                 <input
                   type="number"
                   value={businessParams.operatingHours}
                   onChange={(e) => setBusinessParams(prev => ({ ...prev, operatingHours: e.target.value }))}
-                  className="w-16 px-2 py-1 bg-gray-700 border border-gray-600 rounded text-sm focus:ring-1 focus:ring-blue-500"
+                  className="w-12 sm:w-16 px-1 sm:px-2 py-1 bg-background border border-input rounded text-xs sm:text-sm focus:ring-1 focus:ring-ring"
                   placeholder="12"
                 />
-                <span className="text-xs text-gray-400">jam</span>
+                <span className="text-xs text-muted-foreground">hrs</span>
               </div>
 
-              <div className="flex items-center space-x-2">
-                <span className="text-xs text-gray-400">Rp</span>
+              <div className="flex items-center space-x-1 sm:space-x-2">
+                <select
+                  value={businessParams.currency}
+                  onChange={handleCurrencyChange}
+                  className="w-16 sm:w-20 px-1 sm:px-2 py-1 bg-background border border-input rounded text-xs sm:text-sm focus:ring-1 focus:ring-ring"
+                >
+                  {Object.keys(CURRENCIES).map(code => (
+                    <option key={code} value={code}>
+                      {code}
+                    </option>
+                  ))}
+                </select>
+                <span className="text-xs text-muted-foreground">
+                  {getCurrencySymbol(businessParams.currency)}
+                </span>
                 <input
                   type="number"
-                  step="1000"
+                  step={getInputStep(businessParams.currency)}
                   value={businessParams.productPrice}
                   onChange={(e) => setBusinessParams(prev => ({ ...prev, productPrice: e.target.value }))}
-                  className="w-20 px-2 py-1 bg-gray-700 border border-gray-600 rounded text-sm focus:ring-1 focus:ring-blue-500"
-                  placeholder="15000"
+                  className="w-16 sm:w-20 px-1 sm:px-2 py-1 bg-background border border-input rounded text-xs sm:text-sm focus:ring-1 focus:ring-ring"
+                  placeholder={CURRENCIES[businessParams.currency]?.placeholder || '0.00'}
                 />
               </div>
-
+              
               {/* Action Buttons */}
               <button
                 onClick={handleAnalysis}
                 disabled={isAnalyzing || !selectedLocation || !businessParams.buildingWidth || !businessParams.operatingHours || !businessParams.productPrice}
-                className="px-4 py-2 bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 disabled:from-gray-600 disabled:to-gray-600 disabled:cursor-not-allowed rounded-lg font-medium flex items-center space-x-2 transition-all text-sm"
+                className="px-3 sm:px-4 py-2 bg-primary hover:bg-primary/90 disabled:bg-muted disabled:cursor-not-allowed rounded-lg font-medium flex items-center space-x-2 transition-all text-xs sm:text-sm text-primary-foreground"
               >
                 {isAnalyzing ? (
                   <>
-                    <Loader className="h-4 w-4 animate-spin" />
-                    <span>Analisis...</span>
+                    <Loader className="h-3 w-3 sm:h-4 sm:w-4 animate-spin" />
+                    <span className="hidden sm:inline">Analyzing...</span>
+                    <span className="sm:hidden">...</span>
                   </>
                 ) : (
                   <>
-                    <Play className="h-4 w-4" />
-                    <span>Analisis</span>
+                    <Play className="h-3 w-3 sm:h-4 sm:w-4" />
+                    <span>Analyze</span>
                   </>
                 )}
               </button>
@@ -624,7 +699,7 @@ const BusinessAnalysisApp = ({ user, logout }) => {
               {(selectedLocation || analysisResults) && (
                 <button
                   onClick={resetAnalysis}
-                  className="px-3 py-2 bg-gray-600 hover:bg-gray-700 rounded-lg font-medium transition-colors text-sm"
+                  className="px-2 sm:px-3 py-2 bg-secondary hover:bg-secondary/90 text-secondary-foreground rounded-lg font-medium transition-colors text-xs sm:text-sm"
                 >
                   Reset
                 </button>
@@ -634,9 +709,9 @@ const BusinessAnalysisApp = ({ user, logout }) => {
         </div>
 
         {/* Main Content - Split Layout */}
-        <div className="flex-1 flex">
-          {/* Left Panel - Map (60% width) */}
-          <div className="w-3/5 relative border-r border-gray-700">
+        <div className="flex-1 flex flex-col lg:flex-row">
+          {/* Left Panel - Map */}
+          <div className="w-full lg:w-3/5 h-64 sm:h-80 lg:h-auto relative border-b lg:border-b-0 lg:border-r border-border">
             <div
               id="business-map"
               ref={mapRef}
@@ -647,48 +722,48 @@ const BusinessAnalysisApp = ({ user, logout }) => {
             {/* Simple Instructions */}
             {!selectedLocation && (
               <div className="absolute top-4 left-4 z-10 pointer-events-none">
-                <div className="bg-black/70 text-white px-3 py-2 rounded-lg text-sm">
-                  📍 Klik di peta untuk pilih lokasi
+                <div className="bg-background/90 text-foreground px-3 py-2 rounded-lg text-sm border border-border">
+                  📍 Click map to select location
                 </div>
               </div>
             )}
 
             {/* Loading overlay */}
             {!mapLoaded && (
-              <div className="absolute inset-0 flex items-center justify-center bg-gray-900/80 z-20">
+              <div className="absolute inset-0 flex items-center justify-center bg-background/80 z-20">
                 <div className="text-center">
-                  <Loader className="h-8 w-8 animate-spin mx-auto mb-3 text-blue-400" />
-                  <p className="text-lg text-gray-300">Memuat peta...</p>
+                  <Loader className="h-8 w-8 animate-spin mx-auto mb-3 text-primary" />
+                  <p className="text-lg text-muted-foreground">Loading Map...</p>
                 </div>
               </div>
             )}
           </div>
 
-          {/* Right Panel - Progress & Info (40% width) */}
-          <div className="w-2/5 bg-gray-800 flex flex-col">
+          {/* Right Panel - Progress & Info */}
+          <div className="w-full lg:w-2/5 bg-card flex flex-col">
             {!isAnalyzing ? (
               /* Instructions Panel */
-              <div className="p-6 flex-1">
-                <h3 className="text-xl font-bold text-white mb-4">📍 Analysis Guide</h3>
-                <div className="space-y-4">
-                  <div className="p-4 bg-gray-700/50 rounded-lg">
-                    <h4 className="font-semibold text-blue-400 mb-2">1. Select Location</h4>
-                    <p className="text-sm text-gray-300">Use search bar or click directly on map to select business location</p>
+              <div className="p-4 sm:p-6 flex-1">
+                <h3 className="text-lg sm:text-xl font-bold text-card-foreground mb-4">📍 Analysis Guide</h3>
+                <div className="space-y-3 sm:space-y-4">
+                  <div className="p-3 sm:p-4 bg-background/50 rounded-lg">
+                    <h4 className="font-semibold text-blue-400 mb-2 text-sm sm:text-base">1. Select Location</h4>
+                    <p className="text-xs sm:text-sm text-muted-foreground">Use the search bar or click directly on the map to select your business location</p>
                   </div>
-                  <div className="p-4 bg-gray-700/50 rounded-lg">
-                    <h4 className="font-semibold text-green-400 mb-2">2. Fill Parameters</h4>
-                    <p className="text-sm text-gray-300">Enter building width (meters), operating hours, and product price</p>
+                  <div className="p-3 sm:p-4 bg-background/50 rounded-lg">
+                    <h4 className="font-semibold text-green-400 mb-2 text-sm sm:text-base">2. Enter Parameters</h4>
+                    <p className="text-xs sm:text-sm text-muted-foreground">Input building width (meters), operating hours, and product price</p>
                   </div>
-                  <div className="p-4 bg-gray-700/50 rounded-lg">
-                    <h4 className="font-semibold text-purple-400 mb-2">3. AI Analysis</h4>
-                    <p className="text-sm text-gray-300">AI will analyze location and calculate business profitability following Kenny chart methodology</p>
+                  <div className="p-3 sm:p-4 bg-background/50 rounded-lg">
+                    <h4 className="font-semibold text-purple-400 mb-2 text-sm sm:text-base">3. AI Analysis</h4>
+                    <p className="text-xs sm:text-sm text-muted-foreground">AI will analyze the location and calculate business profitability following Kenny chart methodology</p>
                   </div>
                 </div>
 
                 {selectedLocation && (
-                  <div className="mt-6 p-4 bg-green-900/30 border border-green-700 rounded-lg">
-                    <h4 className="font-semibold text-green-400 mb-2">✅ Location Selected</h4>
-                    <p className="text-sm text-gray-300">
+                  <div className="mt-4 sm:mt-6 p-3 sm:p-4 bg-green-900/30 border border-green-700 rounded-lg">
+                    <h4 className="font-semibold text-green-400 mb-2 text-sm sm:text-base">✅ Location Selected</h4>
+                    <p className="text-xs sm:text-sm text-muted-foreground">
                       Lat: {selectedLocation.lat.toFixed(6)}<br/>
                       Lng: {selectedLocation.lng.toFixed(6)}
                     </p>
@@ -697,9 +772,9 @@ const BusinessAnalysisApp = ({ user, logout }) => {
               </div>
             ) : (
               /* Progress Panel */
-              <div className="p-6 flex-1" ref={progressRef}>
-                <h3 className="text-xl font-bold text-white mb-6">🔄 Analysis Progress</h3>
-                <div className="space-y-4 max-h-96 overflow-y-auto">
+              <div className="p-4 sm:p-6 flex-1" ref={progressRef}>
+                <h3 className="text-lg sm:text-xl font-bold text-card-foreground mb-4 sm:mb-6">🔄 Analysis Progress</h3>
+                <div className="space-y-3 sm:space-y-4 max-h-64 sm:max-h-96 overflow-y-auto">
                   {analysisProgress.steps.map((step, index) => (
                     <div
                       key={step.id}
@@ -707,14 +782,14 @@ const BusinessAnalysisApp = ({ user, logout }) => {
                       className={`p-4 rounded-lg border transition-all duration-300 ${
                         step.status === 'completed' ? 'bg-green-900/30 border-green-700' :
                         step.status === 'active' ? 'bg-blue-900/30 border-blue-700 shadow-lg' :
-                        'bg-gray-700/30 border-gray-600'
+                        'bg-zinc-900/30 border-gray-600'
                       }`}
                     >
                       <div className="flex items-center mb-2">
                         <div className={`w-6 h-6 rounded-full flex items-center justify-center text-xs font-bold mr-3 ${
                           step.status === 'completed' ? 'bg-green-600 text-white' :
                           step.status === 'active' ? 'bg-blue-600 text-white animate-pulse' :
-                          'bg-gray-600 text-gray-300'
+                          'bg-zinc-800 text-gray-300'
                         }`}>
                           {step.status === 'completed' ? '✓' : step.id}
                         </div>
@@ -744,7 +819,7 @@ const BusinessAnalysisApp = ({ user, logout }) => {
 
                       {/* Show data when available */}
                       {step.data && (
-                        <div className="mt-3 ml-9 p-2 bg-gray-800/50 rounded text-xs">
+                        <div className="mt-3 ml-9 p-2 bg-zinc-950/50 rounded text-xs">
                           <pre className="text-gray-400 whitespace-pre-wrap">
                             {JSON.stringify(step.data, null, 2).substring(0, 200)}...
                           </pre>
@@ -760,15 +835,15 @@ const BusinessAnalysisApp = ({ user, logout }) => {
 
         {/* Results Panel - Bottom Overlay */}
         {showResults && analysisResults && (
-          <div className="absolute bottom-0 left-0 right-0 bg-gray-800/95 backdrop-blur-sm border-t border-gray-700 p-4 z-30 max-h-80 overflow-y-auto">
+          <div className="absolute bottom-0 left-0 right-0 bg-card/95 backdrop-blur-sm border-t border-border p-3 sm:p-4 z-30 max-h-64 sm:max-h-80 overflow-y-auto">
             <div className="flex items-center justify-between mb-3">
               <h3 className="text-lg font-bold flex items-center">
                 <TrendingUp className="h-5 w-5 mr-2 text-green-400" />
-                Hasil Analisis Profitabilitas
+                Profitability Analysis Results
               </h3>
               <button
                 onClick={() => setShowResults(false)}
-                className="p-1 hover:bg-gray-700 rounded"
+                className="p-1 hover:bg-zinc-900 rounded"
               >
                 <X className="h-4 w-4" />
               </button>
@@ -776,29 +851,29 @@ const BusinessAnalysisApp = ({ user, logout }) => {
 
             {/* Main Metrics */}
             <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 mb-4">
-              <div className="bg-gray-700/80 p-3 rounded-lg text-center">
+              <div className="bg-zinc-900/80 p-3 rounded-lg text-center">
                 <Users className="h-6 w-6 mx-auto mb-1 text-blue-400" />
                 <div className="text-xl font-bold text-white">{analysisResults.metrics?.tppd || 'N/A'}</div>
-                <div className="text-xs text-gray-400">Customer/day</div>
+                <div className="text-xs text-gray-400">Customers/Day</div>
               </div>
 
-              <div className="bg-gray-700/80 p-3 rounded-lg text-center">
+              <div className="bg-zinc-900/80 p-3 rounded-lg text-center">
                 <DollarSign className="h-6 w-6 mx-auto mb-1 text-green-400" />
                 <div className="text-xl font-bold text-white">
-                  {analysisResults.metrics?.dailyRevenue ? `Rp${analysisResults.metrics.dailyRevenue.toLocaleString()}` : 'N/A'}
+                  {analysisResults.metrics?.dailyRevenue ? formatCurrency(analysisResults.metrics.dailyRevenue, businessParams.currency) : 'N/A'}
                 </div>
                 <div className="text-xs text-gray-400">Daily Revenue</div>
               </div>
 
-              <div className="bg-gray-700/80 p-3 rounded-lg text-center">
+              <div className="bg-zinc-900/80 p-3 rounded-lg text-center">
                 <TrendingUp className="h-6 w-6 mx-auto mb-1 text-purple-400" />
                 <div className="text-xl font-bold text-white">
-                  {analysisResults.metrics?.monthlyRevenue ? `Rp${analysisResults.metrics.monthlyRevenue.toLocaleString()}` : 'N/A'}
+                  {analysisResults.metrics?.monthlyRevenue ? formatCurrency(analysisResults.metrics.monthlyRevenue, businessParams.currency) : 'N/A'}
                 </div>
                 <div className="text-xs text-gray-400">Monthly Revenue</div>
               </div>
 
-              <div className="bg-gray-700/80 p-3 rounded-lg text-center">
+              <div className="bg-zinc-900/80 p-3 rounded-lg text-center">
                 <Calculator className="h-6 w-6 mx-auto mb-1 text-yellow-400" />
                 <div className="text-xl font-bold text-white">
                   {analysisResults.metrics?.monthlyRevenue ?
@@ -809,63 +884,63 @@ const BusinessAnalysisApp = ({ user, logout }) => {
             </div>
 
             {/* Detailed Kenny Chart Parameters */}
-            <div className="bg-gray-700/50 p-3 rounded-lg mb-3">
+            <div className="bg-zinc-900/50 p-3 rounded-lg mb-3">
               <h4 className="font-semibold text-blue-400 mb-2 text-sm flex items-center">
                 <Calculator className="h-4 w-4 mr-1" />
-                Detail Perhitungan Kenny Chart
+                Kenny Chart Calculation Details
               </h4>
               <div className="grid grid-cols-2 lg:grid-cols-4 gap-2 text-xs">
-                <div className="bg-gray-800/50 p-2 rounded">
+                <div className="bg-zinc-950/50 p-2 rounded">
                   <div className="text-gray-400">CGLP (Population)</div>
                   <div className="text-white font-semibold">{analysisResults.metrics?.cglp || 'N/A'}</div>
                 </div>
-                <div className="bg-gray-800/50 p-2 rounded">
+                <div className="bg-zinc-950/50 p-2 rounded">
                   <div className="text-gray-400">Residential Pop</div>
                   <div className="text-white font-semibold">{analysisResults.metrics?.pops || 'N/A'}</div>
                 </div>
-                <div className="bg-gray-800/50 p-2 rounded">
+                <div className="bg-zinc-950/50 p-2 rounded">
                   <div className="text-gray-400">PDR (Density)</div>
                   <div className="text-white font-semibold">{analysisResults.metrics?.pdr || 'N/A'}</div>
                 </div>
-                <div className="bg-gray-800/50 p-2 rounded">
+                <div className="bg-zinc-950/50 p-2 rounded">
                   <div className="text-gray-400">APC</div>
                   <div className="text-white font-semibold">{analysisResults.metrics?.apc || 'N/A'}</div>
                 </div>
-                <div className="bg-gray-800/50 p-2 rounded">
+                <div className="bg-zinc-950/50 p-2 rounded">
                   <div className="text-gray-400">APT (Traffic)</div>
                   <div className="text-white font-semibold">{analysisResults.metrics?.apt || 'N/A'}</div>
                 </div>
-                <div className="bg-gray-800/50 p-2 rounded">
+                <div className="bg-zinc-950/50 p-2 rounded">
                   <div className="text-gray-400">VCDT (Visitors)</div>
                   <div className="text-white font-semibold">{analysisResults.metrics?.vcdt || 'N/A'}</div>
                 </div>
-                <div className="bg-gray-800/50 p-2 rounded">
-                  <div className="text-gray-400">Area (sqkm)</div>
+                <div className="bg-zinc-950/50 p-2 rounded">
+                  <div className="text-gray-400">Area (km²)</div>
                   <div className="text-white font-semibold">{analysisResults.locationData?.areaSquareKm?.toFixed(6) || 'N/A'}</div>
                 </div>
-                <div className="bg-gray-800/50 p-2 rounded">
-                  <div className="text-gray-400">Road Area (sqm)</div>
+                <div className="bg-zinc-950/50 p-2 rounded">
+                  <div className="text-gray-400">Road Area (m²)</div>
                   <div className="text-white font-semibold">{analysisResults.metrics?.roadAreaSqm || 'N/A'}</div>
                 </div>
               </div>
             </div>
 
             {/* Area Distribution */}
-            <div className="bg-gray-700/50 p-3 rounded-lg">
+            <div className="bg-zinc-900/50 p-3 rounded-lg">
               <h4 className="font-semibold text-green-400 mb-2 text-sm flex items-center">
                 <MapPin className="h-4 w-4 mr-1" />
-                Distribusi Area (AI Analysis)
+                Area Distribution (AI Analysis)
               </h4>
               <div className="grid grid-cols-3 gap-2 text-xs">
-                <div className="bg-gray-800/50 p-2 rounded text-center">
+                <div className="bg-zinc-950/50 p-2 rounded text-center">
                   <div className="text-gray-400">Residential</div>
                   <div className="text-white font-semibold">{analysisResults.areaDistribution?.residential || 'N/A'}%</div>
                 </div>
-                <div className="bg-gray-800/50 p-2 rounded text-center">
-                  <div className="text-gray-400">Road</div>
+                <div className="bg-zinc-950/50 p-2 rounded text-center">
+                  <div className="text-gray-400">Roads</div>
                   <div className="text-white font-semibold">{analysisResults.areaDistribution?.road || 'N/A'}%</div>
                 </div>
-                <div className="bg-gray-800/50 p-2 rounded text-center">
+                <div className="bg-zinc-950/50 p-2 rounded text-center">
                   <div className="text-gray-400">Open Space</div>
                   <div className="text-white font-semibold">{analysisResults.areaDistribution?.openSpace || 'N/A'}%</div>
                 </div>

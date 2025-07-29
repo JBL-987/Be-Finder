@@ -1,8 +1,8 @@
 import React from 'react';
-import { 
-  Users, 
-  TrendingUp, 
-  DollarSign, 
+import {
+  Users,
+  TrendingUp,
+  DollarSign,
   Calculator,
   Target,
   Clock,
@@ -11,6 +11,7 @@ import {
   Route,
   Activity
 } from 'lucide-react';
+import { formatCurrency } from '../services/currencies';
 
 const BusinessMetricsDisplay = ({ analysisResults }) => {
   if (!analysisResults?.metrics) return null;
@@ -21,12 +22,9 @@ const BusinessMetricsDisplay = ({ analysisResults }) => {
     return new Intl.NumberFormat('id-ID').format(Math.round(num));
   };
 
-  const formatCurrency = (amount) => {
-    return new Intl.NumberFormat('id-ID', {
-      style: 'currency',
-      currency: 'IDR',
-      minimumFractionDigits: 0
-    }).format(amount);
+  const formatCurrencyAmount = (amount) => {
+    const currency = businessParams?.currency || 'IDR';
+    return formatCurrency(amount, currency);
   };
 
   const formatDecimal = (num, decimals = 3) => {
@@ -125,29 +123,29 @@ const BusinessMetricsDisplay = ({ analysisResults }) => {
           Revenue Projections
         </h3>
         <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-          <div className="text-center p-4 bg-dark-bg/50 rounded-lg">
+          <div className="text-center p-4 bg-background/50 rounded-lg">
             <div className="text-2xl font-bold text-green-400 mb-1">
-              {formatCurrency(metrics.dailyRevenue)}
+              {formatCurrencyAmount(metrics.dailyRevenue)}
             </div>
-            <div className="text-sm text-dark-text-secondary">Daily Revenue</div>
+            <div className="text-sm text-muted-foreground">Daily Revenue</div>
             <div className="text-xs text-green-300 mt-1">
               {formatNumber(metrics.tppd)} customers/day
             </div>
           </div>
-          <div className="text-center p-4 bg-dark-bg/50 rounded-lg">
+          <div className="text-center p-4 bg-background/50 rounded-lg">
             <div className="text-2xl font-bold text-blue-400 mb-1">
-              {formatCurrency(metrics.monthlyRevenue)}
+              {formatCurrencyAmount(metrics.monthlyRevenue)}
             </div>
-            <div className="text-sm text-dark-text-secondary">Monthly Revenue</div>
+            <div className="text-sm text-muted-foreground">Monthly Revenue</div>
             <div className="text-xs text-blue-300 mt-1">
               30 days projection
             </div>
           </div>
-          <div className="text-center p-4 bg-dark-bg/50 rounded-lg">
+          <div className="text-center p-4 bg-background/50 rounded-lg">
             <div className="text-2xl font-bold text-purple-400 mb-1">
-              {formatCurrency(metrics.yearlyRevenue)}
+              {formatCurrencyAmount(metrics.yearlyRevenue)}
             </div>
-            <div className="text-sm text-dark-text-secondary">Yearly Revenue</div>
+            <div className="text-sm text-muted-foreground">Yearly Revenue</div>
             <div className="text-xs text-purple-300 mt-1">
               365 days projection
             </div>
@@ -156,8 +154,8 @@ const BusinessMetricsDisplay = ({ analysisResults }) => {
       </div>
 
       {/* Detailed Calculations */}
-      <div className="bg-dark-surface rounded-xl border border-dark-border p-6">
-        <h3 className="text-xl font-semibold flex items-center text-white mb-6">
+      <div className="bg-card rounded-xl border border-border p-6">
+        <h3 className="text-xl font-semibold flex items-center text-card-foreground mb-6">
           <Calculator className="w-5 h-5 mr-2 text-blue-400" />
           Detailed Calculations
         </h3>
@@ -168,7 +166,7 @@ const BusinessMetricsDisplay = ({ analysisResults }) => {
             return (
               <div
                 key={step.step}
-                className="p-4 bg-dark-bg rounded-lg border border-dark-border hover:border-gray-600 transition-colors"
+                className="p-4 bg-background rounded-lg border border-border hover:border-accent transition-colors"
               >
                 <div className="flex items-start justify-between">
                   <div className="flex items-start space-x-3 flex-1">
@@ -180,12 +178,12 @@ const BusinessMetricsDisplay = ({ analysisResults }) => {
                         <span className="text-xs bg-blue-900/30 text-blue-300 px-2 py-1 rounded">
                           Step {step.step}
                         </span>
-                        <h4 className="font-medium text-white">{step.title}</h4>
+                        <h4 className="font-medium text-card-foreground">{step.title}</h4>
                       </div>
-                      <p className="text-sm text-dark-text-secondary mb-2">
+                      <p className="text-sm text-muted-foreground mb-2">
                         <span className="font-mono">{step.formula}</span>
                       </p>
-                      <p className="text-xs text-gray-400">
+                      <p className="text-xs text-muted-foreground">
                         {step.calculation}
                       </p>
                     </div>
@@ -194,7 +192,7 @@ const BusinessMetricsDisplay = ({ analysisResults }) => {
                     <div className={`text-lg font-bold ${step.color}`}>
                       {step.result}
                     </div>
-                    <div className="text-xs text-dark-text-secondary">
+                    <div className="text-xs text-muted-foreground">
                       {step.unit}
                     </div>
                   </div>
@@ -206,43 +204,43 @@ const BusinessMetricsDisplay = ({ analysisResults }) => {
       </div>
 
       {/* Business Parameters Used */}
-      <div className="bg-dark-surface rounded-xl border border-dark-border p-6">
-        <h3 className="text-xl font-semibold flex items-center text-white mb-4">
+      <div className="bg-card rounded-xl border border-border p-6">
+        <h3 className="text-xl font-semibold flex items-center text-card-foreground mb-4">
           <MapPin className="w-5 h-5 mr-2 text-blue-400" />
           Analysis Parameters
         </h3>
         <div className="grid grid-cols-2 md:grid-cols-4 gap-4 text-sm">
           <div>
-            <span className="text-dark-text-secondary">Building Width:</span>
-            <div className="font-medium text-white">{businessParams.buildingWidth}m</div>
+            <span className="text-muted-foreground">Building Width:</span>
+            <div className="font-medium text-card-foreground">{businessParams.buildingWidth}m</div>
           </div>
           <div>
-            <span className="text-dark-text-secondary">Operating Hours:</span>
-            <div className="font-medium text-white">{businessParams.dailyOperatingHours}h/day</div>
+            <span className="text-muted-foreground">Operating Hours:</span>
+            <div className="font-medium text-card-foreground">{businessParams.dailyOperatingHours}h/day</div>
           </div>
           <div>
-            <span className="text-dark-text-secondary">Visitor Rate:</span>
-            <div className="font-medium text-white">{businessParams.visitorRate}%</div>
+            <span className="text-muted-foreground">Visitor Rate:</span>
+            <div className="font-medium text-card-foreground">{businessParams.visitorRate}%</div>
           </div>
           <div>
-            <span className="text-dark-text-secondary">Purchase Rate:</span>
-            <div className="font-medium text-white">{businessParams.purchaseRate}%</div>
+            <span className="text-muted-foreground">Purchase Rate:</span>
+            <div className="font-medium text-card-foreground">{businessParams.purchaseRate}%</div>
           </div>
           <div>
-            <span className="text-dark-text-secondary">Product Price:</span>
-            <div className="font-medium text-white">{formatCurrency(businessParams.productPrice)}</div>
+            <span className="text-muted-foreground">Product Price:</span>
+            <div className="font-medium text-card-foreground">{formatCurrencyAmount(businessParams.productPrice)}</div>
           </div>
           <div>
-            <span className="text-dark-text-secondary">Population Density:</span>
-            <div className="font-medium text-white">{formatNumber(businessParams.populationDensityPerSqKm)}/km²</div>
+            <span className="text-muted-foreground">Population Density:</span>
+            <div className="font-medium text-card-foreground">{formatNumber(businessParams.populationDensityPerSqKm)}/km²</div>
           </div>
           <div>
-            <span className="text-dark-text-secondary">Analysis Area:</span>
-            <div className="font-medium text-white">{locationData.areaSquareKm?.toFixed(4)} km²</div>
+            <span className="text-muted-foreground">Analysis Area:</span>
+            <div className="font-medium text-card-foreground">{locationData.areaSquareKm?.toFixed(4)} km²</div>
           </div>
           <div>
-            <span className="text-dark-text-secondary">Road Width (avg):</span>
-            <div className="font-medium text-white">30m</div>
+            <span className="text-muted-foreground">Road Width (avg):</span>
+            <div className="font-medium text-card-foreground">30m</div>
           </div>
         </div>
       </div>
