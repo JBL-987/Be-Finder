@@ -1,4 +1,3 @@
-import React from "react";
 import { Brain, Target, Users, MapPin, BarChart3, Zap } from "lucide-react";
 
 const About = () => {

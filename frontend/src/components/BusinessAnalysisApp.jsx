@@ -2,9 +2,11 @@ import { useState, useEffect, useRef } from 'react';
 import Swal from 'sweetalert2';
 import L from 'leaflet';
 import 'leaflet/dist/leaflet.css';
+import jsPDF from 'jspdf';
 import { analyzeLocationImage, calculateBusinessMetrics } from '../services/gemini';
 import { captureMapScreenshot } from '../services/mapScreenshot';
 import { CURRENCIES, formatCurrency, getCurrencySymbol } from '../services/currencies';
+import { autoSaveAnalysisResult, saveAnalysisResult, getActor } from '../services/analysisStorage';
 
 // Fix Leaflet marker icons in Vite/React
 import markerIcon from 'leaflet/dist/images/marker-icon.png';
@@ -42,10 +44,17 @@ import {
   AlertCircle,
   Loader,
   X,
-  Search
+  Search,
+  Save,
+  FolderOpen,
+  Upload,
+  Download,
+  Trash2,
+  FileText,
+  File
 } from 'lucide-react';
 
-const BusinessAnalysisApp = ({ user, logout }) => {
+const BusinessAnalysisApp = ({ actor, isAuthenticated, login, logout }) => {
   const [selectedLocation, setSelectedLocation] = useState(null);
   const [businessParams, setBusinessParams] = useState({
     buildingWidth: '',
@@ -60,6 +69,12 @@ const BusinessAnalysisApp = ({ user, logout }) => {
   const [mapLoaded, setMapLoaded] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
   const [isSearching, setIsSearching] = useState(false);
+
+  // Essential state hooks
+  const [files, setFiles] = useState([]);
+  const [fileTransferProgress, setFileTransferProgress] = useState(null);
+  const [errorMessage, setErrorMessage] = useState('');
+  const [showFileManager, setShowFileManager] = useState(false);
 
   // Progress tracking states
   const [analysisProgress, setAnalysisProgress] = useState({
@@ -80,12 +95,10 @@ const BusinessAnalysisApp = ({ user, logout }) => {
   const mapRef = useRef(null);
   const mapInstanceRef = useRef(null);
 
-  // Dynamic step for input based on currency
+  // Updated input step helper
   const getInputStep = (currencyCode) => {
-    const currency = CURRENCIES[currencyCode];
-    if (!currency) return '0.01';
-    // For high-denomination currencies like IDR, VND, etc., use larger steps
-    return ['IDR', 'VND', 'KRW', 'JPY', 'IRR', 'HUF', 'CLP', 'COP', 'PYG', 'UGX', 'TZS', 'KZT', 'UZS', 'MMK', 'KHR', 'LAK', 'LBP', 'RSD', 'ISK'].includes(currencyCode) ? '1000' : '0.01';
+    const highDenominationCurrencies = ['IDR', 'VND', 'KRW', 'JPY'];
+    return highDenominationCurrencies.includes(currencyCode) ? '1000' : '0.01';
   };
 
   // Add custom styles for map
@@ -260,6 +273,531 @@ const BusinessAnalysisApp = ({ user, logout }) => {
     return () => window.removeEventListener('resize', handleResize);
   }, []);
 
+  // Load files when component mounts
+  useEffect(() => {
+    loadFiles();
+  }, []);
+
+  // Function to load files from backend
+  const loadFiles = async () => {
+    try {
+      const actor = getActor();
+      const fileList = await actor.getFiles();
+      
+      // Convert BigInt values to Numbers
+      const formattedFiles = fileList.map(file => ({
+        name: file.name,
+        size: safeBigIntToNumber(file.size),
+        fileType: file.fileType
+      }));
+
+      setFiles(formattedFiles);
+    } catch (error) {
+      console.error('Failed to load files:', error);
+      await Swal.fire({
+        icon: 'error',
+        title: 'Loading Failed',
+        text: 'Failed to load files from backend',
+        background: '#1f2937',
+        color: '#ffffff',
+        confirmButtonColor: '#ef4444'
+      });
+    }
+  };
+
+  // Add this helper function at the top of your component
+  const safeBigIntToNumber = (value) => {
+    if (typeof value === 'bigint') {
+      return Number(value);
+    }
+    if (typeof value === 'string') {
+      return Number(value);
+    }
+    return Number(value || 0);
+  };
+
+  // File upload function with chunked upload
+  async function handleFileUpload(event) {
+    const file = event.target.files[0];
+    setErrorMessage('');
+
+    if (!file) {
+      await Swal.fire({
+        icon: 'warning',
+        title: 'No File Selected',
+        text: 'Please select a file to upload.',
+        background: '#1f2937',
+        color: '#ffffff',
+        confirmButtonColor: '#3b82f6'
+      });
+      return;
+    }
+
+    try {
+      const actor = getActor();
+      
+      if (await actor.checkFileExists(file.name)) {
+        await Swal.fire({
+          icon: 'warning',
+          title: 'File Already Exists',
+          text: `File "${file.name}" already exists. Please choose a different file name.`,
+          background: '#1f2937',
+          color: '#ffffff',
+          confirmButtonColor: '#3b82f6'
+        });
+        return;
+      }
+
+      setFileTransferProgress({
+        mode: 'Uploading',
+        fileName: file.name,
+        progress: 0
+      });
+
+      const reader = new FileReader();
+      reader.onload = async (e) => {
+        const content = new Uint8Array(e.target.result);
+        const chunkSize = 1024 * 1024; // 1 MB chunks
+        const totalChunks = Math.ceil(content.length / chunkSize);
+
+        try {
+          for (let i = 0; i < totalChunks; i++) {
+            const start = i * chunkSize;
+            const end = Math.min(start + chunkSize, content.length);
+            const chunk = content.slice(start, end);
+
+            await actor.uploadFileChunk(file.name, chunk, i, file.type);
+            const progressPercent = Math.floor(((i + 1) / totalChunks) * 100);
+            setFileTransferProgress(prev => ({
+              ...prev,
+              progress: progressPercent
+            }));
+          }
+
+          await loadFiles();
+          await Swal.fire({
+            icon: 'success',
+            title: 'Upload Complete',
+            text: `${file.name} has been uploaded successfully.`,
+            timer: 2000,
+            showConfirmButton: false,
+            background: '#1f2937',
+            color: '#ffffff'
+          });
+        } catch (error) {
+          console.error('Upload failed:', error);
+          await Swal.fire({
+            icon: 'error',
+            title: 'Upload Failed',
+            text: `Failed to upload ${file.name}: ${error.message}`,
+            background: '#1f2937',
+            color: '#ffffff',
+            confirmButtonColor: '#ef4444'
+          });
+        } finally {
+          setFileTransferProgress(null);
+        }
+      };
+
+      reader.readAsArrayBuffer(file);
+    } catch (error) {
+      console.error('Upload preparation failed:', error);
+      await Swal.fire({
+        icon: 'error',
+        title: 'Upload Failed',
+        text: `Failed to prepare upload: ${error.message}`,
+        background: '#1f2937',
+        color: '#ffffff',
+        confirmButtonColor: '#ef4444'
+      });
+      setFileTransferProgress(null);
+    }
+  }
+
+
+  // File download function with chunked download
+  async function handleFileDownload(name) {
+    try {
+      setFileTransferProgress({
+        mode: 'Downloading',
+        fileName: name,
+        progress: 0
+      });
+      
+      const actor = getActor();
+      const totalChunksResult = await actor.getTotalChunks(name);
+      const totalChunks = typeof totalChunksResult === 'bigint' ? Number(totalChunksResult) : totalChunksResult;
+      const fileTypeResult = await actor.getFileType(name);
+      const fileType = fileTypeResult?.[0] || 'application/octet-stream';
+      
+      const chunks = [];
+
+      for (let i = 0; i < totalChunks; i++) {
+        const chunkBlob = await actor.getFileChunk(name, i);
+        if (!chunkBlob?.[0]) {
+          throw new Error(`Failed to retrieve chunk ${i}`);
+        }
+        
+        chunks.push(chunkBlob[0]);
+        setFileTransferProgress(prev => ({
+          ...prev,
+          progress: Math.floor(((i + 1) / totalChunks) * 100)
+        }));
+      }
+
+      const data = new Blob(chunks, { type: fileType });
+      const url = URL.createObjectURL(data);
+      const link = document.createElement('a');
+      link.href = url;
+      link.download = name;
+      link.click();
+      URL.revokeObjectURL(url);
+
+      await Swal.fire({
+        icon: 'success',
+        title: 'Download Complete',
+        text: `${name} has been downloaded successfully.`,
+        timer: 2000,
+        showConfirmButton: false,
+        background: '#1f2937',
+        color: '#ffffff'
+      });
+    } catch (error) {
+      console.error('Download failed:', error);
+      await Swal.fire({
+        icon: 'error',
+        title: 'Download Failed',
+        text: `Failed to download ${name}: ${error.message}`,
+        background: '#1f2937',
+        color: '#ffffff',
+        confirmButtonColor: '#ef4444'
+      });
+    } finally {
+      setFileTransferProgress(null);
+    }
+  }
+
+
+  // File delete function
+  async function handleFileDelete(name) {
+    const result = await Swal.fire({
+      icon: 'warning',
+      title: 'Confirm Delete',
+      text: `Are you sure you want to delete "${name}"?`,
+      showCancelButton: true,
+      confirmButtonText: 'Delete',
+      cancelButtonText: 'Cancel',
+      background: '#1f2937',
+      color: '#ffffff',
+      confirmButtonColor: '#ef4444',
+      cancelButtonColor: '#6b7280'
+    });
+
+    if (result.isConfirmed) {
+      try {
+        const actor = getActor();
+        const success = await actor.deleteFile(name);
+        
+        if (success) {
+          await loadFiles();
+          await Swal.fire({
+            icon: 'success',
+            title: 'File Deleted',
+            text: `${name} has been deleted successfully.`,
+            timer: 2000,
+            showConfirmButton: false,
+            background: '#1f2937',
+            color: '#ffffff'
+          });
+        } else {
+          throw new Error('Delete operation failed');
+        }
+      } catch (error) {
+        console.error('Delete failed:', error);
+        await Swal.fire({
+          icon: 'error',
+          title: 'Delete Failed',
+          text: `Failed to delete ${name}: ${error.message}`,
+          background: '#1f2937',
+          color: '#ffffff',
+          confirmButtonColor: '#ef4444'
+        });
+      }
+    }
+  }
+
+  // PDF generation function for analysis results and upload to backend
+  const generateAndUploadPDF = async () => {
+    if (!analysisResults) {
+      setErrorMessage('No analysis results to export');
+      return;
+    }
+
+    try {
+      const doc = new jsPDF();
+      
+      // Title
+      doc.setFontSize(20);
+      doc.text('Business Analysis Report', 20, 20);
+      
+      // Location info
+      doc.setFontSize(12);
+      doc.text(`Location: ${selectedLocation.lat.toFixed(6)}, ${selectedLocation.lng.toFixed(6)}`, 20, 40);
+      doc.text(`Date: ${new Date().toLocaleDateString()}`, 20, 50);
+      
+      // Business Parameters
+      doc.setFontSize(14);
+      doc.text('Business Parameters:', 20, 70);
+      doc.setFontSize(10);
+      doc.text(`Building Width: ${businessParams.buildingWidth}m`, 20, 80);
+      doc.text(`Operating Hours: ${businessParams.operatingHours} hours`, 20, 90);
+      doc.text(`Product Price: ${formatCurrency(parseFloat(businessParams.productPrice), businessParams.currency)}`, 20, 100);
+      
+      // Key Metrics
+      doc.setFontSize(14);
+      doc.text('Key Metrics:', 20, 120);
+      doc.setFontSize(10);
+      doc.text(`Daily Customers: ${analysisResults.metrics?.tppd || 'N/A'}`, 20, 130);
+      doc.text(`Daily Revenue: ${analysisResults.metrics?.dailyRevenue ? formatCurrency(analysisResults.metrics.dailyRevenue, businessParams.currency) : 'N/A'}`, 20, 140);
+      doc.text(`Monthly Revenue: ${analysisResults.metrics?.monthlyRevenue ? formatCurrency(analysisResults.metrics.monthlyRevenue, businessParams.currency) : 'N/A'}`, 20, 150);
+      
+      // Area Distribution
+      doc.setFontSize(14);
+      doc.text('Area Distribution:', 20, 170);
+      doc.setFontSize(10);
+      doc.text(`Residential: ${analysisResults.areaDistribution?.residential || 'N/A'}%`, 20, 180);
+      doc.text(`Roads: ${analysisResults.areaDistribution?.road || 'N/A'}%`, 20, 190);
+      doc.text(`Open Space: ${analysisResults.areaDistribution?.openSpace || 'N/A'}%`, 20, 200);
+      
+      // Kenny Chart Details
+      doc.setFontSize(14);
+      doc.text('Kenny Chart Calculations:', 20, 220);
+      doc.setFontSize(10);
+      doc.text(`CGLP (Population): ${analysisResults.metrics?.cglp || 'N/A'}`, 20, 230);
+      doc.text(`PDR (Density): ${analysisResults.metrics?.pdr || 'N/A'}`, 20, 240);
+      doc.text(`APC: ${analysisResults.metrics?.apc || 'N/A'}`, 20, 250);
+      doc.text(`APT (Traffic): ${analysisResults.metrics?.apt || 'N/A'}`, 20, 260);
+      doc.text(`VCDT (Visitors): ${analysisResults.metrics?.vcdt || 'N/A'}`, 20, 270);
+      
+      // Generate PDF as blob
+      const pdfBlob = doc.output('blob');
+      const fileName = `business-analysis-${new Date().toISOString().split('T')[0]}.pdf`;
+      
+      // Upload PDF to backend
+      const actor = getActor();
+      
+      if (await actor.checkFileExists(fileName)) {
+        const timestamp = new Date().getTime();
+        const uniqueFileName = `business-analysis-${new Date().toISOString().split('T')[0]}-${timestamp}.pdf`;
+        await uploadPDFToBackend(pdfBlob, uniqueFileName);
+      } else {
+        await uploadPDFToBackend(pdfBlob, fileName);
+      }
+      
+      await loadFiles();
+      
+      Swal.fire({
+        icon: 'success',
+        title: 'PDF Generated & Saved!',
+        text: `Analysis report saved to blockchain storage as ${fileName}`,
+        background: '#1f2937',
+        color: '#ffffff',
+        confirmButtonColor: '#10b981'
+      });
+    } catch (error) {
+      console.error('PDF generation failed:', error);
+      setErrorMessage('Failed to generate and save PDF report');
+    }
+  };
+
+  // Helper function to upload PDF to backend
+  const uploadPDFToBackend = async (pdfBlob, fileName) => {
+    const actor = getActor();
+    
+    setFileTransferProgress({
+      mode: 'Uploading',
+      fileName: fileName,
+      progress: 0
+    });
+
+    const arrayBuffer = await pdfBlob.arrayBuffer();
+    const content = new Uint8Array(arrayBuffer);
+    const chunkSize = 1024 * 1024; // 1 MB chunks
+    const totalChunks = Math.ceil(content.length / chunkSize);
+
+    try {
+      for (let i = 0; i < totalChunks; i++) {
+        const start = i * chunkSize;
+        const end = Math.min(start + chunkSize, content.length);
+        const chunk = content.slice(start, end);
+
+        await actor.uploadFileChunk(fileName, chunk, i, 'application/pdf');
+        
+        // FIXED: Explicit conversion for progress calculation
+        const progressPercent = Math.floor(((i + 1) / totalChunks) * 100);
+        setFileTransferProgress((prev) => ({
+          ...prev,
+          progress: progressPercent
+        }));
+      }
+    } finally {
+      setFileTransferProgress(null);
+    }
+  };
+
+  // Generate comprehensive analysis report and save to blockchain storage
+  const generateAnalysisReport = async (title) => {
+    if (!analysisResults) {
+      throw new Error('No analysis results to generate report');
+    }
+
+    try {
+      const doc = new jsPDF();
+      const currentDate = new Date();
+      
+      // Header with title
+      doc.setFontSize(22);
+      doc.setFont(undefined, 'bold');
+      doc.text('BE-FINDER BUSINESS ANALYSIS REPORT', 20, 25);
+      
+      // Analysis title
+      doc.setFontSize(16);
+      doc.setFont(undefined, 'normal');
+      doc.text(title, 20, 40);
+      
+      // Date and location
+      doc.setFontSize(12);
+      doc.text(`Generated: ${currentDate.toLocaleDateString()} ${currentDate.toLocaleTimeString()}`, 20, 55);
+      doc.text(`Location: ${selectedLocation.lat.toFixed(6)}, ${selectedLocation.lng.toFixed(6)}`, 20, 65);
+      
+      // Separator line
+      doc.setLineWidth(0.5);
+      doc.line(20, 75, 190, 75);
+      
+      // Executive Summary
+      doc.setFontSize(16);
+      doc.setFont(undefined, 'bold');
+      doc.text('EXECUTIVE SUMMARY', 20, 90);
+      
+      doc.setFontSize(11);
+      doc.setFont(undefined, 'normal');
+      const dailyRevenue = Number(analysisResults.metrics?.dailyRevenue || 0);
+      const monthlyRevenue = Number(analysisResults.metrics?.monthlyRevenue || 0);
+      const yearlyRevenue = monthlyRevenue * 12;
+      const dailyCustomers = Number(analysisResults.metrics?.tppd || 0);
+      
+      doc.text(`This analysis evaluates the business potential for the selected location using`, 20, 105);
+      doc.text(`AI-powered area analysis and Kenny Chart methodology.`, 20, 115);
+      doc.text(``, 20, 125);
+      doc.text(`Key Findings:`, 20, 135);
+      doc.text(`• Estimated Daily Customers: ${dailyCustomers}`, 25, 145);
+      doc.text(`• Daily Revenue Potential: ${formatCurrency(dailyRevenue, businessParams.currency)}`, 25, 155);
+      doc.text(`• Monthly Revenue Potential: ${formatCurrency(monthlyRevenue, businessParams.currency)}`, 25, 165);
+      doc.text(`• Annual Revenue Potential: ${formatCurrency(yearlyRevenue, businessParams.currency)}`, 25, 175);
+      
+      // Business Parameters
+      doc.setFontSize(16);
+      doc.setFont(undefined, 'bold');
+      doc.text('BUSINESS PARAMETERS', 20, 195);
+      
+      doc.setFontSize(11);
+      doc.setFont(undefined, 'normal');
+      doc.text(`Building Width: ${businessParams.buildingWidth} meters`, 20, 210);
+      doc.text(`Operating Hours: ${businessParams.operatingHours} hours per day`, 20, 220);
+      doc.text(`Product Price: ${formatCurrency(parseFloat(businessParams.productPrice), businessParams.currency)}`, 20, 230);
+      doc.text(`Currency: ${businessParams.currency}`, 20, 240);
+      
+      // Area Analysis (AI Results)
+      doc.setFontSize(16);
+      doc.setFont(undefined, 'bold');
+      doc.text('AI AREA ANALYSIS', 20, 260);
+      
+      doc.setFontSize(11);
+      doc.setFont(undefined, 'normal');
+      doc.text(`Using Gemini AI 2.5 Pro for satellite image analysis:`, 20, 275);
+      doc.text(`• Residential Area: ${analysisResults.areaDistribution?.residential || 'N/A'}%`, 25, 285);
+      doc.text(`• Road Coverage: ${analysisResults.areaDistribution?.road || 'N/A'}%`, 25, 295);
+      doc.text(`• Open Space: ${analysisResults.areaDistribution?.openSpace || 'N/A'}%`, 25, 305);
+      
+      // New page for detailed calculations
+      doc.addPage();
+      
+      // Kenny Chart Calculations
+      doc.setFontSize(16);
+      doc.setFont(undefined, 'bold');
+      doc.text('KENNY CHART METHODOLOGY', 20, 25);
+      
+      doc.setFontSize(11);
+      doc.setFont(undefined, 'normal');
+      doc.text(`The Kenny Chart is a proven methodology for business location analysis`, 20, 40);
+      doc.text(`that calculates customer potential based on population density and traffic patterns.`, 20, 50);
+      
+      doc.text(``, 20, 65);
+      doc.setFont(undefined, 'bold');
+      doc.text('Calculation Details:', 20, 75);
+      doc.setFont(undefined, 'normal');
+      
+      doc.text(`CGLP (Catchment General Location Population): ${Number(analysisResults.metrics?.cglp || 0)}`, 25, 90);
+      doc.text(`POPS (Population on Residential): ${Number(analysisResults.metrics?.pops || 0)}`, 25, 100);
+      doc.text(`PDR (Population Density Ratio): ${analysisResults.metrics?.pdr || 'N/A'}`, 25, 110);
+      doc.text(`Road Area: ${Number(analysisResults.metrics?.roadAreaSqm || 0)} m²`, 25, 120);
+      doc.text(`APC (Average Population Capitalization): ${analysisResults.metrics?.apc || 'N/A'}`, 25, 130);
+      doc.text(`APT (Average Population Traffic): ${Number(analysisResults.metrics?.apt || 0)}`, 25, 140);
+      doc.text(`VCDT (Visitor Capitalizations Daily Traffic): ${Number(analysisResults.metrics?.vcdt || 0)}`, 25, 150);
+      doc.text(`TPPD (Total People-Purchase Daily): ${dailyCustomers}`, 25, 160);
+      
+      // Revenue Breakdown
+      doc.setFontSize(16);
+      doc.setFont(undefined, 'bold');
+      doc.text('REVENUE PROJECTIONS', 20, 180);
+      
+      doc.setFontSize(11);
+      doc.setFont(undefined, 'normal');
+      doc.text(`Based on calculated customer traffic and pricing:`, 20, 195);
+      doc.text(``, 20, 205);
+      doc.text(`Daily Revenue: ${formatCurrency(dailyRevenue, businessParams.currency)}`, 25, 215);
+      doc.text(`Monthly Revenue: ${formatCurrency(monthlyRevenue, businessParams.currency)}`, 25, 225);
+      doc.text(`Annual Revenue: ${formatCurrency(yearlyRevenue, businessParams.currency)}`, 25, 235);
+      
+      // Profitability Score
+      const profitabilityScore = monthlyRevenue ?
+        Math.min(10, Math.max(1, Math.round((monthlyRevenue / 1000000) * 2))) : 0;
+      
+      doc.text(``, 20, 250);
+      doc.setFont(undefined, 'bold');
+      doc.text(`Profitability Score: ${profitabilityScore}/10`, 25, 260);
+      doc.setFont(undefined, 'normal');
+      
+      let scoreDescription = '';
+      if (profitabilityScore >= 8) scoreDescription = 'Excellent business potential';
+      else if (profitabilityScore >= 6) scoreDescription = 'Good business potential';
+      else if (profitabilityScore >= 4) scoreDescription = 'Moderate business potential';
+      else scoreDescription = 'Consider alternative locations';
+      
+      doc.text(`Assessment: ${scoreDescription}`, 25, 270);
+      
+      // Footer
+      doc.setFontSize(8);
+      doc.text('Generated by Be-Finder - AI-Powered Business Location Analysis', 20, 285);
+      doc.text('This report is based on AI analysis and statistical calculations. Results may vary.', 20, 292);
+      
+      // Generate PDF and save to blockchain
+      const pdfBlob = doc.output('blob');
+      const timestamp = new Date().getTime();
+      const fileName = `${title.replace(/[^a-zA-Z0-9]/g, '_')}_Report_${timestamp}.pdf`;
+      
+      await uploadPDFToBackend(pdfBlob, fileName);
+      await loadFiles(); // Refresh file list
+      
+      console.log(`Analysis report generated and saved: ${fileName}`);
+      return fileName;
+      
+    } catch (error) {
+      console.error('Report generation failed:', error);
+      throw error;
+    }
+  };
+
   // Search for places using Nominatim
   const searchPlace = async (query) => {
     if (!query.trim()) return;
@@ -292,7 +830,7 @@ const BusinessAnalysisApp = ({ user, logout }) => {
             .bindPopup(`📍 ${result.display_name}<br/>Lat: ${lat.toFixed(6)}<br/>Lng: ${lng.toFixed(6)}`)
             .openPopup();
 
-          setSelectedLocation({ lat, lng });
+            setSelectedLocation({ lat, lng });
         }
       } else {
         await Swal.fire({
@@ -523,11 +1061,25 @@ const BusinessAnalysisApp = ({ user, logout }) => {
       setCurrentStep(3);
       setShowResults(true);
 
+      // Auto-save analysis results to Motoko backend
+      try {
+        const businessParamsWithLocation = {
+          ...businessParams,
+          location: selectedLocation
+        };
+        
+        await autoSaveAnalysisResult(finalResults, businessParamsWithLocation);
+        console.log('Analysis results auto-saved to Motoko backend');
+      } catch (saveError) {
+        console.warn('Auto-save to backend failed:', saveError);
+        // Continue with success notification even if save fails
+      }
+
       // Show success notification
       await Swal.fire({
         icon: 'success',
         title: 'Analysis Successful!',
-        text: 'Business profitability analysis completed.',
+        text: 'Business profitability analysis completed and saved.',
         timer: 2000,
         showConfirmButton: false,
         background: '#1f2937',
@@ -590,9 +1142,115 @@ const BusinessAnalysisApp = ({ user, logout }) => {
     }));
   };
 
+  // Manual save function for results panel - now automatically generates report file
+  const handleManualSave = async () => {
+    if (!analysisResults || !selectedLocation) {
+      await Swal.fire({
+        icon: 'warning',
+        title: 'No Analysis to Save',
+        text: 'Please complete an analysis first before saving.',
+        background: '#1f2937',
+        color: '#ffffff',
+        confirmButtonColor: '#3b82f6'
+      });
+      return;
+    }
+
+    try {
+      const { value: title } = await Swal.fire({
+        title: 'Save Analysis to Blockchain',
+        input: 'text',
+        inputLabel: 'Analysis Title (Optional)',
+        inputPlaceholder: 'Enter a title for this analysis...',
+        showCancelButton: true,
+        confirmButtonText: 'Save to ICP Blockchain',
+        cancelButtonText: 'Cancel',
+        background: '#1f2937',
+        color: '#ffffff',
+        confirmButtonColor: '#10b981',
+        cancelButtonColor: '#6b7280',
+        inputValidator: (value) => {
+          // Title is optional, so no validation needed
+          return null;
+        }
+      });
+
+      if (title !== undefined) { // User clicked Save (even with empty title)
+        const businessParamsWithLocation = {
+          ...businessParams,
+          location: selectedLocation
+        };
+
+        // Save analysis data to blockchain
+        const result = await saveAnalysisResult(
+          analysisResults,
+          businessParamsWithLocation,
+          title || `Analysis ${new Date().toLocaleDateString()}`,
+          'Manually saved analysis with complete profitability calculations'
+        );
+
+        if (result.success) {
+          // Automatically generate and save report file
+          await generateAnalysisReport(title || `Analysis ${new Date().toLocaleDateString()}`);
+          
+          await Swal.fire({
+            icon: 'success',
+            title: 'Saved to Blockchain!',
+            html: `
+              <p>Your analysis has been permanently saved to the ICP blockchain.</p>
+              <p><strong>📄 Report file automatically generated and saved!</strong></p>
+              <br>
+              <div style="background: rgba(16, 185, 129, 0.1); padding: 12px; border-radius: 8px; margin: 8px 0;">
+                <strong>📊 Saved Data:</strong><br>
+                • Daily Revenue: ${formatCurrency(Number(analysisResults.metrics?.dailyRevenue || 0), businessParams.currency)}<br>
+                • Monthly Revenue: ${formatCurrency(Number(analysisResults.metrics?.monthlyRevenue || 0), businessParams.currency)}<br>
+                • Daily Customers: ${Number(analysisResults.metrics?.tppd || 0)}<br>
+                • Location: ${selectedLocation.lat.toFixed(4)}, ${selectedLocation.lng.toFixed(4)}
+              </div>
+            `,
+            confirmButtonText: 'Great!',
+            background: '#1f2937',
+            color: '#ffffff',
+            confirmButtonColor: '#10b981'
+          });
+        }
+      }
+    } catch (error) {
+      console.error('Manual save failed:', error);
+      await Swal.fire({
+        icon: 'error',
+        title: 'Save Failed',
+        html: `
+          <p>Failed to save analysis to blockchain.</p>
+          <br>
+          <div style="background: rgba(239, 68, 68, 0.1); padding: 12px; border-radius: 8px; margin: 8px 0;">
+            <strong>Error:</strong> ${error.message}
+          </div>
+          <p><small>Your analysis is still available in this session. Try saving again or check your connection.</small></p>
+        `,
+        confirmButtonText: 'OK',
+        background: '#1f2937',
+        color: '#ffffff',
+        confirmButtonColor: '#ef4444'
+      });
+    }
+  };
+
   return (
     <div className="min-h-screen bg-background text-foreground">
-      <div className="flex flex-col h-[calc(100vh-80px)]">
+      {/* Header Section */}
+      <div className="bg-card border-b border-border">
+        <div className="max-w-7xl mx-auto px-4 py-6">
+          <div className="text-center">
+            <h1 className="text-3xl font-bold text-card-foreground mb-2">
+            </h1>
+            <p className="text-muted-foreground">
+            </p>
+          </div>
+        </div>
+      </div>
+
+      <div className="flex flex-col h-[calc(100vh-140px)]">
         {/* Simplified Top Panel */}
         <div className="bg-card border-b border-border p-3">
           <div className="flex flex-col lg:flex-row items-start lg:items-center justify-between max-w-7xl mx-auto gap-4">
@@ -694,6 +1352,17 @@ const BusinessAnalysisApp = ({ user, logout }) => {
                     <span>Analyze</span>
                   </>
                 )}
+              </button>
+
+
+              <button
+                onClick={() => setShowFileManager(!showFileManager)}
+                className="px-3 sm:px-4 py-2 bg-purple-600 hover:bg-purple-700 rounded-lg font-medium flex items-center space-x-2 transition-colors text-xs sm:text-sm text-white"
+                title="Toggle File Management"
+              >
+                <File className="h-3 w-3 sm:h-4 sm:w-4" />
+                <span className="hidden sm:inline">Files</span>
+                <span className="sm:hidden">Files</span>
               </button>
 
               {(selectedLocation || analysisResults) && (
@@ -841,26 +1510,37 @@ const BusinessAnalysisApp = ({ user, logout }) => {
                 <TrendingUp className="h-5 w-5 mr-2 text-green-400" />
                 Profitability Analysis Results
               </h3>
-              <button
-                onClick={() => setShowResults(false)}
-                className="p-1 hover:bg-zinc-900 rounded"
-              >
-                <X className="h-4 w-4" />
-              </button>
+              <div className="flex items-center space-x-2">
+                <button
+                  onClick={handleManualSave}
+                  className="px-3 py-1 bg-green-600 hover:bg-green-700 rounded-lg text-sm font-medium flex items-center space-x-1 transition-colors text-white"
+                  title="Save to ICP Blockchain"
+                >
+                  <Save className="h-4 w-4" />
+                  <span className="hidden sm:inline">Save to Blockchain</span>
+                  <span className="sm:hidden">Save</span>
+                </button>
+                <button
+                  onClick={() => setShowResults(false)}
+                  className="p-1 hover:bg-zinc-900 rounded"
+                >
+                  <X className="h-4 w-4" />
+                </button>
+              </div>
             </div>
 
             {/* Main Metrics */}
             <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 mb-4">
               <div className="bg-zinc-900/80 p-3 rounded-lg text-center">
                 <Users className="h-6 w-6 mx-auto mb-1 text-blue-400" />
-                <div className="text-xl font-bold text-white">{analysisResults.metrics?.tppd || 'N/A'}</div>
+                <div className="text-xl font-bold text-white">{analysisResults.metrics?.tppd ? Number(analysisResults.metrics.tppd) : 'N/A'}</div>
                 <div className="text-xs text-gray-400">Customers/Day</div>
               </div>
 
               <div className="bg-zinc-900/80 p-3 rounded-lg text-center">
                 <DollarSign className="h-6 w-6 mx-auto mb-1 text-green-400" />
                 <div className="text-xl font-bold text-white">
-                  {analysisResults.metrics?.dailyRevenue ? formatCurrency(analysisResults.metrics.dailyRevenue, businessParams.currency) : 'N/A'}
+                  {analysisResults.metrics?.dailyRevenue ? formatCurrency(Number(analysisResults.metrics.dailyRevenue), businessParams.currency) : 'N/A'}
                 </div>
                 <div className="text-xs text-gray-400">Daily Revenue</div>
               </div>
@@ -868,7 +1548,7 @@ const BusinessAnalysisApp = ({ user, logout }) => {
               <div className="bg-zinc-900/80 p-3 rounded-lg text-center">
                 <TrendingUp className="h-6 w-6 mx-auto mb-1 text-purple-400" />
                 <div className="text-xl font-bold text-white">
-                  {analysisResults.metrics?.monthlyRevenue ? formatCurrency(analysisResults.metrics.monthlyRevenue, businessParams.currency) : 'N/A'}
+                  {analysisResults.metrics?.monthlyRevenue ? formatCurrency(Number(analysisResults.metrics.monthlyRevenue), businessParams.currency) : 'N/A'}
                 </div>
                 <div className="text-xs text-gray-400">Monthly Revenue</div>
               </div>
@@ -877,7 +1557,7 @@ const BusinessAnalysisApp = ({ user, logout }) => {
                 <Calculator className="h-6 w-6 mx-auto mb-1 text-yellow-400" />
                 <div className="text-xl font-bold text-white">
                   {analysisResults.metrics?.monthlyRevenue ?
-                    Math.min(10, Math.max(1, Math.round((analysisResults.metrics.monthlyRevenue / 1000000) * 2))) : 'N/A'}/10
+                    Math.min(10, Math.max(1, Math.round((Number(analysisResults.metrics.monthlyRevenue) / 1000000) * 2))) : 'N/A'}/10
                 </div>
                 <div className="text-xs text-gray-400">Profitability Score</div>
               </div>
@@ -887,16 +1567,16 @@ const BusinessAnalysisApp = ({ user, logout }) => {
             <div className="bg-zinc-900/50 p-3 rounded-lg mb-3">
               <h4 className="font-semibold text-blue-400 mb-2 text-sm flex items-center">
                 <Calculator className="h-4 w-4 mr-1" />
-                Kenny Chart Calculation Details
+                Kenny Chart's Calculation Details
               </h4>
               <div className="grid grid-cols-2 lg:grid-cols-4 gap-2 text-xs">
                 <div className="bg-zinc-950/50 p-2 rounded">
                   <div className="text-gray-400">CGLP (Population)</div>
-                  <div className="text-white font-semibold">{analysisResults.metrics?.cglp || 'N/A'}</div>
+                  <div className="text-white font-semibold">{analysisResults.metrics?.cglp ? Number(analysisResults.metrics.cglp) : 'N/A'}</div>
                 </div>
                 <div className="bg-zinc-950/50 p-2 rounded">
                   <div className="text-gray-400">Residential Pop</div>
-                  <div className="text-white font-semibold">{analysisResults.metrics?.pops || 'N/A'}</div>
+                  <div className="text-white font-semibold">{analysisResults.metrics?.pops ? Number(analysisResults.metrics.pops) : 'N/A'}</div>
                 </div>
                 <div className="bg-zinc-950/50 p-2 rounded">
                   <div className="text-gray-400">PDR (Density)</div>
@@ -908,11 +1588,11 @@ const BusinessAnalysisApp = ({ user, logout }) => {
                 </div>
                 <div className="bg-zinc-950/50 p-2 rounded">
                   <div className="text-gray-400">APT (Traffic)</div>
-                  <div className="text-white font-semibold">{analysisResults.metrics?.apt || 'N/A'}</div>
+                  <div className="text-white font-semibold">{analysisResults.metrics?.apt ? Number(analysisResults.metrics.apt) : 'N/A'}</div>
                 </div>
                 <div className="bg-zinc-950/50 p-2 rounded">
                   <div className="text-gray-400">VCDT (Visitors)</div>
-                  <div className="text-white font-semibold">{analysisResults.metrics?.vcdt || 'N/A'}</div>
+                  <div className="text-white font-semibold">{analysisResults.metrics?.vcdt ? Number(analysisResults.metrics.vcdt) : 'N/A'}</div>
                 </div>
                 <div className="bg-zinc-950/50 p-2 rounded">
                   <div className="text-gray-400">Area (km²)</div>
@@ -920,7 +1600,7 @@ const BusinessAnalysisApp = ({ user, logout }) => {
                 </div>
                 <div className="bg-zinc-950/50 p-2 rounded">
                   <div className="text-gray-400">Road Area (m²)</div>
-                  <div className="text-white font-semibold">{analysisResults.metrics?.roadAreaSqm || 'N/A'}</div>
+                  <div className="text-white font-semibold">{analysisResults.metrics?.roadAreaSqm ? Number(analysisResults.metrics.roadAreaSqm) : 'N/A'}</div>
                 </div>
               </div>
             </div>
@@ -946,8 +1626,133 @@ const BusinessAnalysisApp = ({ user, logout }) => {
                 </div>
               </div>
             </div>
+
           </div>
         )}
+
+
+        {/* File Management Modal */}
+        {showFileManager && (
+          <div className="fixed inset-0 bg-black/50 backdrop-blur-sm z-50 flex items-center justify-center p-4">
+            <div className="bg-card border border-border rounded-lg w-full max-w-2xl max-h-[80vh] overflow-hidden">
+              {/* Header */}
+              <div className="flex items-center justify-between p-4 border-b border-border">
+                <h2 className="text-xl font-bold text-card-foreground flex items-center">
+                  <FileText className="h-5 w-5 mr-2 text-purple-400" />
+                  Generated Reports
+                </h2>
+                <button
+                  onClick={() => setShowFileManager(false)}
+                  className="p-2 hover:bg-muted rounded-lg transition-colors"
+                >
+                  <X className="h-5 w-5" />
+                </button>
+                           </div>
+
+              {/* Content */}
+              <div className="p-4 overflow-y-auto max-h-[60vh]">
+                {/* Info Section */}
+                <div className="mb-6 p-4 bg-blue-900/20 border border-blue-700 rounded-lg">
+                  <h3 className="text-lg font-semibold text-card-foreground mb-2 flex items-center">
+                    <FileText className="h-4 w-4 mr-2 text-blue-400" />
+                    Automatic Report Generation
+                  </h3>
+                  <p className="text-sm text-muted-foreground">
+                    Analysis reports are automatically generated and saved to blockchain storage when you click "Save to Blockchain" after completing an analysis.
+                  </p>
+                </div>
+
+                {/* File Transfer Progress */}
+                {fileTransferProgress && (
+                  <div className="mb-6 p-4 bg-muted rounded-lg">
+                    <div className="flex items-center justify-between mb-2">
+                      <span className="text-sm font-medium text-card-foreground">
+                        {fileTransferProgress.mode} {fileTransferProgress.fileName}
+                      </span>
+                      <span className="text-sm text-muted-foreground">{fileTransferProgress.progress}%</span>
+                    </div>
+                    <div className="w-full bg-background rounded-full h-2">
+                      <div
+                        className="bg-primary h-2 rounded-full transition-all duration-300"
+                        style={{ width: `${fileTransferProgress.progress}%` }}
+                      ></div>
+                    </div>
+                  </div>
+                )}
+
+                {/* Error Message */}
+                {errorMessage && (
+                  <div className="mb-6 p-4 bg-destructive/10 border border-destructive/20 rounded-lg">
+                    <div className="flex items-center">
+                      <AlertCircle className="h-4 w-4 text-destructive mr-2" />
+                      <span className="text-sm text-destructive">{errorMessage}</span>
+                    </div>
+                  </div>
+                )}
+
+                {/* Files List */}
+                <div>
+                  <h3 className="text-lg font-semibold text-card-foreground mb-3 flex items-center">
+                    <FolderOpen className="h-4 w-4 mr-2 text-green-400" />
+                    Your Files ({files.length})
+                  </h3>
+                  
+                  {files.length > 0 ? (
+                    <div className="space-y-2">
+                      {files.map((file, index) => (
+                        <div key={index} className="flex items-center justify-between p-3 bg-muted rounded-lg">
+                          <div className="flex items-center space-x-3 flex-1 min-w-0">
+                            <File className="h-5 w-5 text-muted-foreground flex-shrink-0" />
+                            <div className="min-w-0 flex-1">
+                              <p className="text-sm font-medium text-card-foreground truncate">{file.name}</p>
+                              <p className="text-xs text-muted-foreground">
+                                {(file.size / 1024).toFixed(1)} KB • {file.fileType}
+                              </p>
+                            </div>
+                          </div>
+                          <div className="flex items-center space-x-2 flex-shrink-0">
+                            <button
+                              onClick={() => handleFileDownload(file.name)}
+                              className="p-2 hover:bg-background rounded-lg text-green-600 hover:text-green-500 transition-colors"
+                              title="Download"
+                            >
+                              <Download className="h-4 w-4" />
+                            </button>
+                            {file.fileType === 'application/pdf' && (
+                              <button
+                                onClick={() => handleFileDownload(file.name)}
+                                className="p-2 hover:bg-background rounded-lg text-blue-600 hover:text-blue-500 transition-colors"
+                                title="Export PDF"
+                              >
+                                <FileText className="h-4 w-4" />
+                              </button>
+                            )}
+                            <button
+                              onClick={() => handleFileDelete(file.name)}
+                              className="p-2 hover:bg-background rounded-lg text-destructive hover:text-destructive/80 transition-colors"
+                              title="Delete"
+                            >
+                              <Trash2 className="h-4 w-4" />
+                            </button>
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  ) : (
+                    <div className="text-center py-8">
+                      <File className="h-12 w-12 text-muted-foreground mx-auto mb-3" />
+                      <p className="text-muted-foreground">No files uploaded yet</p>
+                      <p className="text-sm text-muted-foreground mt-1">
+                        Upload your first file to get started
+                      </p>
+                    </div>
+                  )}
+                </div>
+              </div>
+            </div>
+          </div>
+        )}
+
       </div>
     </div>
   );

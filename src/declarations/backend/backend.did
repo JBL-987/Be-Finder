@@ -1,6 +1,63 @@
+type LocationData = 
+ record {
+   address: opt text;
+   areaSquareKm: float64;
+   lat: float64;
+   lng: float64;
+   populationDensityPerSqKm: nat;
+ };
+type BusinessParameters = 
+ record {
+   buildingWidth: float64;
+   currency: text;
+   operatingHours: float64;
+   productPrice: float64;
+ };
+type BusinessMetrics = 
+ record {
+   apc: float64;
+   apt: nat;
+   cglp: nat;
+   dailyRevenue: nat;
+   monthlyRevenue: nat;
+   pdr: float64;
+   pops: nat;
+   roadAreaSqm: nat;
+   tppd: nat;
+   vcdt: nat;
+   yearlyRevenue: nat;
+ };
+type BusinessAnalysisResult = 
+ record {
+   areaDistribution: AreaDistribution;
+   businessMetrics: BusinessMetrics;
+   businessParameters: BusinessParameters;
+   id: text;
+   locationData: LocationData;
+   notes: opt text;
+   timestamp: int;
+   title: opt text;
+ };
+type AreaDistribution = 
+ record {
+   openSpace: float64;
+   residential: float64;
+   road: float64;
+ };
 service : {
+  analysisResultExists: (text) -> (bool);
   checkFileExists: (text) -> (bool);
+  deleteAnalysisResult: (text) -> (bool);
   deleteFile: (text) -> (bool);
+  getAnalysisResult: (text) -> (opt BusinessAnalysisResult);
+  getAnalysisResults: () -> (vec BusinessAnalysisResult);
+  getAnalysisResultsCount: () -> (nat);
+  getAnalysisResultsPaginated: (nat, nat) ->
+   (record {
+      hasMore: bool;
+      results: vec BusinessAnalysisResult;
+      total: nat;
+    });
   getFileChunk: (text, nat) -> (opt blob);
   getFileType: (text) -> (opt text);
   getFiles: () -> (vec record {
@@ -9,5 +66,9 @@ service : {
                          size: nat;
                        });
   getTotalChunks: (text) -> (nat);
+  saveAnalysisResult: (text, LocationData, AreaDistribution, BusinessMetrics,
+   BusinessParameters, opt text, opt text) -> (bool);
+  updateAnalysisResult: (text, LocationData, AreaDistribution,
+   BusinessMetrics, BusinessParameters, opt text, opt text) -> (bool);
   uploadFileChunk: (text, blob, nat, text) -> ();
 }

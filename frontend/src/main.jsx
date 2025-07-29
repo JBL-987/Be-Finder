@@ -9,6 +9,7 @@ import {
 import { AuthClient } from "@dfinity/auth-client";
 import { createActor } from "declarations/backend";
 import { canisterId } from "declarations/backend/index.js";
+import { setActor as setAnalysisActor } from "./services/analysisStorage";
 import Navbar_Component from "./components/Navbar";
 import Footer_Component from "./components/Footer";
 import App from "./pages/App";
@@ -57,6 +58,7 @@ function Main() {
             },
           });
           setActor(newActor);
+          setAnalysisActor(newActor); // Set actor for analysisStorage service
           setIsAuthenticated(true);
         }
       } catch (error) {
@@ -89,6 +91,7 @@ function Main() {
           });
 
           setActor(newActor);
+          setAnalysisActor(newActor); // Set actor for analysisStorage service
           setIsAuthenticated(true);
         },
       });
